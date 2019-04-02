@@ -514,7 +514,7 @@
 <p>最重要的是拷贝并替换数据文件，即站点更目录下的source文件夹，所有博文的原始文件都在这个目录下。</p>
 <p>如果原博客的配置和文章等信息托管在github上，则可以使用下面的方法从远程下载文件到本地。首先需要切换到博客目录，执行git init命令把当前目录设置为git托管目录，并添加远程仓库，如下所示，需按照自己的远程仓库替换地址。接着就可以从远程仓库拉取数据了，如果拉取的过程中提升本地文件已存在，则需要先重命名本地文件或删除本地文件。</p>
 <figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git init</span><br><span class="line">git remote <span class="built_in">add</span> origin http<span class="variable">s:</span>//github.<span class="keyword">com</span>/xxxx/blog.git</span><br><span class="line">git pull origin master</span><br></pre></td></tr></table></figure>
-<h2 id="配置MathJax"><a href="#配置MathJax" class="headerlink" title="配置MathJax"></a>配置MathJax</h2><p>配置方法参考我的另一篇博文：</p>
+<h2 id="配置MathJax"><a href="#配置MathJax" class="headerlink" title="配置MathJax"></a>配置MathJax</h2><p>配置方法参考我的另一篇博文：<a href="/math-in-hexo/" title="在Hexo中渲染MathJax数学公式">在Hexo中渲染MathJax数学公式</a></p>
 <h2 id="安装RSS插件"><a href="#安装RSS插件" class="headerlink" title="安装RSS插件"></a>安装RSS插件</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm <span class="keyword">install</span> hexo-generator-feed <span class="comment">--save</span></span><br></pre></td></tr></table></figure>
 <h2 id="安装Git插件"><a href="#安装Git插件" class="headerlink" title="安装Git插件"></a>安装Git插件</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm <span class="keyword">install</span> hexo-deployer-git <span class="comment">--save</span></span><br></pre></td></tr></table></figure>
 <h2 id="安装hexo-asset-image的插件来处理图片"><a href="#安装hexo-asset-image的插件来处理图片" class="headerlink" title="安装hexo-asset-image的插件来处理图片"></a>安装hexo-asset-image的插件来处理图片</h2><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install https:<span class="regexp">//gi</span>thub.com<span class="regexp">/CodeFalling/</span>hexo-asset-image --save</span><br></pre></td></tr></table></figure>
@@ -723,8 +723,6 @@
                     
                   
                     
-                    
-                      
                     
                       
                     
