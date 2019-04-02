@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/my_carton.png?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Trie树，也叫字典树、前缀树。可用于”predictive text”和”autocompletion”，亦可用于统计词频（边插入Trie树边更新或添加词频）。 在计算机科学中，trie，又称前缀树或字典树，是一种有序树，用于保存关联数组，其中的键通常是字符串。与二叉查找树不同，键不是直接保存在节点中，而是由节点在树中的位置决定。一个节点的所有子孙都有相同的前缀，也就是这个节点对应的字符串，而根">
+<meta name="keywords" content="python,trie">
+<meta property="og:type" content="article">
+<meta property="og:title" content="支持中文的基于词为基本粒度的前缀树（prefix trie）实现">
+<meta property="og:url" content="http://xudongyang.coding.me/trie/index.html">
+<meta property="og:site_name" content="小毛驴">
+<meta property="og:description" content="Trie树，也叫字典树、前缀树。可用于”predictive text”和”autocompletion”，亦可用于统计词频（边插入Trie树边更新或添加词频）。 在计算机科学中，trie，又称前缀树或字典树，是一种有序树，用于保存关联数组，其中的键通常是字符串。与二叉查找树不同，键不是直接保存在节点中，而是由节点在树中的位置决定。一个节点的所有子孙都有相同的前缀，也就是这个节点对应的字符串，而根">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-04-02T02:43:36.876Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="支持中文的基于词为基本粒度的前缀树（prefix trie）实现">
+<meta name="twitter:description" content="Trie树，也叫字典树、前缀树。可用于”predictive text”和”autocompletion”，亦可用于统计词频（边插入Trie树边更新或添加词频）。 在计算机科学中，trie，又称前缀树或字典树，是一种有序树，用于保存关联数组，其中的键通常是字符串。与二叉查找树不同，键不是直接保存在节点中，而是由节点在树中的位置决定。一个节点的所有子孙都有相同的前缀，也就是这个节点对应的字符串，而根">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小毛驴" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="http://xudongyang.coding.me/trie/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>支持中文的基于词为基本粒度的前缀树（prefix trie）实现 | 小毛驴</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c57513996270ce211928f7fe0c7a5483";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小毛驴</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Adventure may hurt you, but monotony will kill you.</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-essays">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/essays" rel="section"><i class="menu-item-icon fa fa-fw fa-newspaper-o"></i> <br>essays</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/trie/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">支持中文的基于词为基本粒度的前缀树（prefix trie）实现
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2014-10-28 15:07:30" itemprop="dateCreated datePublished" datetime="2014-10-28T15:07:30+08:00">2014-10-28</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/程序设计/" itemprop="url" rel="index"><span itemprop="name">程序设计</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/程序设计/python/" itemprop="url" rel="index"><span itemprop="name">python</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/trie/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/trie/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Trie树，也叫字典树、前缀树。可用于”predictive text”和”autocompletion”，亦可用于统计词频（边插入Trie树边更新或添加词频）。</p>
+<p>在计算机科学中，trie，又称前缀树或字典树，是一种有序树，用于保存关联数组，其中的键通常是字符串。与二叉查找树不同，键不是直接保存在节点中，而是由节点在树中的位置决定。一个节点的所有子孙都有相同的前缀，也就是这个节点对应的字符串，而根节点对应空字符串。一般情况下，不是所有的节点都有对应的值，只有叶子节点和部分内部节点所对应的键才有相关的值。</p>
+<p>本文实现了基于中文分词为粒度的前缀树。<br><a id="more"></a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python  </span></span><br><span class="line"><span class="comment"># -*- coding:utf-8 -*-  </span></span><br><span class="line"><span class="comment"># * trie, prefix tree, can be used as a dict  </span></span><br><span class="line"><span class="comment"># * author: yangxudongsuda@gmail.com  </span></span><br><span class="line"><span class="keyword">import</span> sys  </span><br><span class="line">reload(sys)  </span><br><span class="line">sys.setdefaultencoding(<span class="string">"utf-8"</span>)  </span><br><span class="line">  </span><br><span class="line"><span class="comment"># Singleton sentinel - works with pickling  </span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">NULL</span><span class="params">(object)</span>:</span>  </span><br><span class="line">  <span class="keyword">pass</span>  </span><br><span class="line">  </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Node</span>:</span>  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, value = NULL)</span>:</span>  </span><br><span class="line">    self.value = value  </span><br><span class="line">    self.children = &#123;&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Trie</span><span class="params">(object)</span>:</span>  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span>  </span><br><span class="line">    self.root = Node()  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">insert</span><span class="params">(self, key, value = None, sep = <span class="string">' '</span>)</span>:</span>  <span class="comment"># key is a word sequence separated by 'sep'  </span></span><br><span class="line">    elements = key <span class="keyword">if</span> isinstance(key, list) <span class="keyword">else</span> key.split(sep)  </span><br><span class="line">    node = self.root  </span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> elements:  </span><br><span class="line">      <span class="keyword">if</span> <span class="keyword">not</span> e: <span class="keyword">continue</span>  </span><br><span class="line">      <span class="keyword">if</span> e <span class="keyword">not</span> <span class="keyword">in</span> node.children:  </span><br><span class="line">        child = Node()  </span><br><span class="line">        node.children[e] = child  </span><br><span class="line">        node = child  </span><br><span class="line">      <span class="keyword">else</span>:  </span><br><span class="line">        node = node.children[e]  </span><br><span class="line">    node.value = value  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(self, key, default = None, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    elements = key <span class="keyword">if</span> isinstance(key, list) <span class="keyword">else</span> key.split(sep)  </span><br><span class="line">    node = self.root  </span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> elements:  </span><br><span class="line">      <span class="keyword">if</span> e <span class="keyword">not</span> <span class="keyword">in</span> node.children:  </span><br><span class="line">        <span class="keyword">return</span> default  </span><br><span class="line">      node = node.children[e]  </span><br><span class="line">    <span class="keyword">return</span> default <span class="keyword">if</span> node.value <span class="keyword">is</span> NULL <span class="keyword">else</span> node.value  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">delete</span><span class="params">(self, key, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    elements = key <span class="keyword">if</span> isinstance(key, list) <span class="keyword">else</span> key.split(sep)  </span><br><span class="line">    <span class="keyword">return</span> self.__delete(elements)  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__delete</span><span class="params">(self, elements, node = None, i = <span class="number">0</span>)</span>:</span>  </span><br><span class="line">    node = node <span class="keyword">if</span> node <span class="keyword">else</span> self.root  </span><br><span class="line">    e = elements[i]  </span><br><span class="line">    <span class="keyword">if</span> e <span class="keyword">in</span> node.children:  </span><br><span class="line">      child_node = node.children[e]  </span><br><span class="line">      <span class="keyword">if</span> len(elements) == (i+<span class="number">1</span>):  </span><br><span class="line">        <span class="keyword">if</span> child_node.value <span class="keyword">is</span> NULL: <span class="keyword">return</span> <span class="literal">False</span> <span class="comment"># not in dict  </span></span><br><span class="line">        <span class="keyword">if</span> len(child_node.children) == <span class="number">0</span>:  </span><br><span class="line">          node.children.pop(e)  </span><br><span class="line">        <span class="keyword">else</span>:  </span><br><span class="line">          child_node.value = NULL  </span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span>  </span><br><span class="line">      <span class="keyword">elif</span> self.__delete(elements, child_node, i+<span class="number">1</span>):  </span><br><span class="line">        <span class="keyword">if</span> len(child_node.children) == <span class="number">0</span>:  </span><br><span class="line">          <span class="keyword">return</span> node.children.pop(e)  </span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span>  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">False</span>  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">shortest_prefix</span><span class="params">(self, key, default = NULL, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    elements = key <span class="keyword">if</span> isinstance(key, list) <span class="keyword">else</span> key.split(sep)  </span><br><span class="line">    results = []  </span><br><span class="line">    node = self.root  </span><br><span class="line">    value = node.value  </span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> elements:  </span><br><span class="line">      <span class="keyword">if</span> e <span class="keyword">in</span> node.children:  </span><br><span class="line">        results.append(e)  </span><br><span class="line">        node = node.children[e]  </span><br><span class="line">        value = node.value  </span><br><span class="line">        <span class="keyword">if</span> value <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">          <span class="keyword">return</span> sep.join(results)  </span><br><span class="line">      <span class="keyword">else</span>:  </span><br><span class="line">        <span class="keyword">break</span>  </span><br><span class="line">    <span class="keyword">if</span> value <span class="keyword">is</span> NULL:  </span><br><span class="line">      <span class="keyword">if</span> default <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">        <span class="keyword">return</span> default  </span><br><span class="line">      <span class="keyword">else</span>:  </span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">"no item matches any prefix of the given key!"</span>)  </span><br><span class="line">    <span class="keyword">return</span> sep.join(results)  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">longest_prefix</span><span class="params">(self, key, default = NULL, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    elements = key <span class="keyword">if</span> isinstance(key, list) <span class="keyword">else</span> key.split(sep)  </span><br><span class="line">    results = []  </span><br><span class="line">    node = self.root  </span><br><span class="line">    value = node.value  </span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> elements:  </span><br><span class="line">      <span class="keyword">if</span> e <span class="keyword">not</span> <span class="keyword">in</span> node.children:  </span><br><span class="line">        <span class="keyword">if</span> value <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">          <span class="keyword">return</span> sep.join(results)  </span><br><span class="line">        <span class="keyword">elif</span> default <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">          <span class="keyword">return</span> default  </span><br><span class="line">        <span class="keyword">else</span>:  </span><br><span class="line">          <span class="keyword">raise</span> Exception(<span class="string">"no item matches any prefix of the given key!"</span>)  </span><br><span class="line">      results.append(e)  </span><br><span class="line">      node = node.children[e]  </span><br><span class="line">      value = node.value  </span><br><span class="line">    <span class="keyword">if</span> value <span class="keyword">is</span> NULL:  </span><br><span class="line">      <span class="keyword">if</span> default <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">        <span class="keyword">return</span> default  </span><br><span class="line">      <span class="keyword">else</span>:  </span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">"no item matches any prefix of the given key!"</span>)  </span><br><span class="line">    <span class="keyword">return</span> sep.join(results)  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">longest_prefix_value</span><span class="params">(self, key, default = NULL, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    elements = key <span class="keyword">if</span> isinstance(key, list) <span class="keyword">else</span> key.split(sep)  </span><br><span class="line">    node = self.root  </span><br><span class="line">    value = node.value  </span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> elements:  </span><br><span class="line">      <span class="keyword">if</span> e <span class="keyword">not</span> <span class="keyword">in</span> node.children:  </span><br><span class="line">        <span class="keyword">if</span> value <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">          <span class="keyword">return</span> value  </span><br><span class="line">        <span class="keyword">elif</span> default <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">          <span class="keyword">return</span> default  </span><br><span class="line">        <span class="keyword">else</span>:  </span><br><span class="line">          <span class="keyword">raise</span> Exception(<span class="string">"no item matches any prefix of the given key!"</span>)  </span><br><span class="line">      node = node.children[e]  </span><br><span class="line">      value = node.value  </span><br><span class="line">    <span class="keyword">if</span> value <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">      <span class="keyword">return</span> value  </span><br><span class="line">    <span class="keyword">if</span> default <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">      <span class="keyword">return</span> default  </span><br><span class="line">    <span class="keyword">raise</span> Exception(<span class="string">"no item matches any prefix of the given key!"</span>)  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">longest_prefix_item</span><span class="params">(self, key, default = NULL, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    elements = key <span class="keyword">if</span> isinstance(key, list) <span class="keyword">else</span> key.split(sep)  </span><br><span class="line">    node = self.root  </span><br><span class="line">    value = node.value  </span><br><span class="line">    results = []  </span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> elements:  </span><br><span class="line">      <span class="keyword">if</span> e <span class="keyword">not</span> <span class="keyword">in</span> node.children:  </span><br><span class="line">        <span class="keyword">if</span> value <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">          <span class="keyword">return</span> (sep.join(results), value)  </span><br><span class="line">        <span class="keyword">elif</span> default <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">          <span class="keyword">return</span> default  </span><br><span class="line">        <span class="keyword">else</span>:  </span><br><span class="line">          <span class="keyword">raise</span> Exception(<span class="string">"no item matches any prefix of the given key!"</span>)  </span><br><span class="line">      results.append(e)  </span><br><span class="line">      node = node.children[e]  </span><br><span class="line">      value = node.value  </span><br><span class="line">    <span class="keyword">if</span> value <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">      <span class="keyword">return</span> (sep.join(results), value)  </span><br><span class="line">    <span class="keyword">if</span> default <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">      <span class="keyword">return</span> (sep.join(results), default)  </span><br><span class="line">    <span class="keyword">raise</span> Exception(<span class="string">"no item matches any prefix of the given key!"</span>)  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__collect_items</span><span class="params">(self, node, path, results, sep)</span>:</span>  </span><br><span class="line">    <span class="keyword">if</span> node.value <span class="keyword">is</span> <span class="keyword">not</span> NULL:  </span><br><span class="line">      results.append((sep.join(path), node.value))  </span><br><span class="line">    <span class="keyword">for</span> k, v <span class="keyword">in</span> node.children.iteritems():  </span><br><span class="line">      path.append(k)  </span><br><span class="line">      self.__collect_items(v, path, results, sep)  </span><br><span class="line">      path.pop()  </span><br><span class="line">    <span class="keyword">return</span> results    </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">items</span><span class="params">(self, prefix, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    elements = prefix <span class="keyword">if</span> isinstance(prefix, list) <span class="keyword">else</span> prefix.split(sep)  </span><br><span class="line">    node = self.root  </span><br><span class="line">    <span class="keyword">for</span> e <span class="keyword">in</span> elements:  </span><br><span class="line">      <span class="keyword">if</span> e <span class="keyword">not</span> <span class="keyword">in</span> node.children:  </span><br><span class="line">        <span class="keyword">return</span> []  </span><br><span class="line">      node = node.children[e]  </span><br><span class="line">    results = []  </span><br><span class="line">    path = [prefix]  </span><br><span class="line">    self.__collect_items(node, path, results, sep)  </span><br><span class="line">    <span class="keyword">return</span> results  </span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">keys</span><span class="params">(self, prefix, sep = <span class="string">' '</span>)</span>:</span>  </span><br><span class="line">    items = self.items(prefix, sep)  </span><br><span class="line">    <span class="keyword">return</span> [key <span class="keyword">for</span> key,value <span class="keyword">in</span> items]</span><br></pre></td></tr></table></figure>
+<p>以下是测试代码：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:  </span><br><span class="line">  trie = Trie()  </span><br><span class="line">  trie.insert(<span class="string">'happy 站台'</span>, <span class="number">1</span>)  </span><br><span class="line">  trie.insert(<span class="string">'happy 站台 xx'</span>, <span class="number">10</span>)  </span><br><span class="line">  trie.insert(<span class="string">'happy 站台 xx yy'</span>, <span class="number">11</span>)  </span><br><span class="line">  trie.insert(<span class="string">'happy 站台 美食 购物 广场'</span>, <span class="number">2</span>)  </span><br><span class="line">  trie.insert(<span class="string">'sm'</span>)  </span><br><span class="line">  trie.insert(<span class="string">'sm 国际'</span>, <span class="number">22</span>)  </span><br><span class="line">  trie.insert(<span class="string">'sm 国际 广场'</span>, <span class="number">2</span>)  </span><br><span class="line">  trie.insert(<span class="string">'sm 城市广场'</span>, <span class="number">3</span>)  </span><br><span class="line">  trie.insert(<span class="string">'sm 广场'</span>, <span class="number">4</span>)  </span><br><span class="line">  trie.insert(<span class="string">'sm 新生活 广场'</span>, <span class="number">5</span>)  </span><br><span class="line">  trie.insert(<span class="string">'sm 购物 广场'</span>, <span class="number">6</span>)  </span><br><span class="line">  trie.insert(<span class="string">'soho 尚都'</span>, <span class="number">3</span>)  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">print</span> trie.get(<span class="string">'sm'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix([], default=<span class="string">"empty list"</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix(<span class="string">'sm'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.shortest_prefix(<span class="string">'happy 站台'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.shortest_prefix(<span class="string">'happy 站台 xx'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.shortest_prefix(<span class="string">'sm'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix(<span class="string">'sm xx'</span>, sep = <span class="string">'&amp;'</span>, default = <span class="literal">None</span>)  </span><br><span class="line">  <span class="keyword">print</span> <span class="string">'sm 广场 --&gt; '</span>, trie.get(<span class="string">'sm 广场'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.get(<span class="string">'sm 广场'</span>.split(<span class="string">' '</span>))  </span><br><span class="line">  <span class="keyword">print</span> trie.get(<span class="string">'神马'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.get(<span class="string">'happy 站台'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.get(<span class="string">'happy 站台 美食 购物 广场'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix(<span class="string">'soho 广场'</span>, <span class="string">'default'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix(<span class="string">'soho 尚都 广场'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix_value(<span class="string">'soho 尚都 广场'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix_value(<span class="string">'xx 尚都 广场'</span>, <span class="number">90</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix_value(<span class="string">'xx 尚都 广场'</span>, <span class="string">'no prefix'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix_item(<span class="string">'soho 尚都 广场'</span>)  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">print</span> <span class="string">'============== keys ================='</span>  </span><br><span class="line">  <span class="keyword">print</span> <span class="string">'prefix "sm": '</span>, <span class="string">' | '</span>.join(trie.keys(<span class="string">'sm'</span>))  </span><br><span class="line">  <span class="keyword">print</span> <span class="string">'============== items ================='</span>  </span><br><span class="line">  <span class="keyword">print</span> <span class="string">'prefix "sm": '</span>, trie.items(<span class="string">'sm'</span>)  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">print</span> <span class="string">'================= delete ====================='</span>  </span><br><span class="line">  <span class="keyword">print</span> trie.delete(<span class="string">'sm 广场'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.get(<span class="string">'sm 广场'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.delete(<span class="string">'sm 国际'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.get(<span class="string">'sm 国际'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.delete(<span class="string">'sm xx'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.delete(<span class="string">'xx'</span>)  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">print</span> <span class="string">'====== no item matches any prefix of given key ========'</span>  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix_value(<span class="string">'happy'</span>)  </span><br><span class="line">  <span class="keyword">print</span> trie.longest_prefix_value(<span class="string">'soho xx'</span>)</span><br></pre></td></tr></table></figure></p>
+<p>运行结果如下：</p>
+<blockquote>
+<p>运行结果：<br>None<br>empty list<br>sm<br>happy 站台<br>happy 站台<br>sm<br>None<br>sm 广场 —&gt;  4<br>4<br>None<br>1<br>2<br>default<br>soho 尚都<br>3<br>90<br>no prefix<br>(‘soho \xe5\xb0\x9a\xe9\x83\xbd’, 3)<br>============== keys =================<br>prefix “sm”:  sm | sm 新生活 广场 | sm 城市广场 | sm 广场 | sm 购物 广场 | sm 国际 | sm 国际 广场<br>============== items =================<br>prefix “sm”:  [(‘sm’, None), (‘sm \xe6\x96\xb0\xe7\x94\x9f\xe6\xb4\xbb \xe5\xb9\xbf\xe5\x9c\xba’, 5), (‘sm \xe5\x9f\x8e\xe5\xb8\x82\xe5\xb9\xbf\xe5\x9c\xba’, 3), (‘sm \xe5\xb9\xbf\xe5\x9c\xba’, 4), (‘sm \xe8\xb4\xad\xe7\x89\xa9 \xe5\xb9\xbf\xe5\x9c\xba’, 6), (‘sm \xe5\x9b\xbd\xe9\x99\x85’, 22), (‘sm \xe5\x9b\xbd\xe9\x99\x85 \xe5\xb9\xbf\xe5\x9c\xba’, 2)]<br>================= delete =====================<br>True<br>None<br>True<br>None<br>False<br>False<br>====== no item matches any prefix of given key ========<br>Traceback (most recent call last):<br>  File “./word_based_trie.py”, line 225, in <module><br>    print trie.longest_prefix_value(‘happy’)<br>  File “./word_based_trie.py”, line 128, in longest_prefix_value<br>    raise Exception(“no item matches any prefix of the given key!”)<br>Exception: no item matches any prefix of the given key!</module></p>
+</blockquote>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/python/" rel="tag"># python</a>
+          
+            <a href="/tags/trie/" rel="tag"># trie</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/search-relevance2/" rel="next" title="O2O服务检索匹配&相关性算法">
+                <i class="fa fa-chevron-left"></i> O2O服务检索匹配&相关性算法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/deep-learning-in-search/" rel="prev" title="Deep Learning在搜索引擎检索结果排序中的应用">
+                Deep Learning在搜索引擎检索结果排序中的应用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yangxudong</p>
+              <div class="site-description motion-element" itemprop="description">勤劳的小毛驴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">37</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://weibo.com/u/1192649764" title="微博 &rarr; http://weibo.com/u/1192649764" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.jianshu.com/users/4e1990280df6/latest_articles" title="简书 &rarr; http://www.jianshu.com/users/4e1990280df6/latest_articles" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i>简书</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://zhuanlan.zhihu.com/yangxudong" title="知乎 &rarr; https://zhuanlan.zhihu.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-medapps"></i>知乎</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://blog.csdn.net/yangxudong" title="CSDN &rarr; http://blog.csdn.net/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.cnblogs.com/yangxudong/" title="博客园 &rarr; http://www.cnblogs.com/yangxudong/" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss-square"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/yangxudong" title="GitHub &rarr; https://github.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:yangxudongsuda@gmail.com" title="E-Mail &rarr; mailto:yangxudongsuda@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope-o"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yangxudong</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    <!-- LOCAL: You can save these files to your site and update links -->
+
+  
+  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
+<!-- END LOCAL -->
+
+<script>
+  function renderGitment() {
+    var gitment = new Gitmint({
+      id: window.location.pathname,
+      owner: 'yangxudong',
+      repo: 'yangxudong.github.io',
+      
+        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+      
+      oauth: {
+      
+      
+        client_secret: '5bb7f33cc97a00106138632b133b361eca31b0fc',
+      
+        client_id: 'a6f099e5dd8b15032ace'
+      }
+    });
+    gitment.render('gitment-container');
+  }
+
+  
+    renderGitment();
+  
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

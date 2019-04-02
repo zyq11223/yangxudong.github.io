@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/my_carton.png?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="集成学习因具有预测精度高的优势而受到广泛关注，尤其是使用决策树作为基学习器的集成学习算法。树的集成算法的著名代码有随机森林和GBDT。随机森林具有很好的抵抗过拟合的特性，并且参数（决策树的个数）对预测性能的影响较小，调参比较容易，一般设置一个比较大的数。GBDT具有很优美的理论基础，一般而言性能更有优势。关于GBDT算法的原理请参考我的前一篇博文《GBDT算法原理深入解析》。 基于树的集成算法还有">
+<meta name="keywords" content="GBDT,集成学习,特征重要度">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tree ensemble算法的特征重要度计算">
+<meta property="og:url" content="http://xudongyang.coding.me/tree-ensemble-importance/index.html">
+<meta property="og:site_name" content="小毛驴">
+<meta property="og:description" content="集成学习因具有预测精度高的优势而受到广泛关注，尤其是使用决策树作为基学习器的集成学习算法。树的集成算法的著名代码有随机森林和GBDT。随机森林具有很好的抵抗过拟合的特性，并且参数（决策树的个数）对预测性能的影响较小，调参比较容易，一般设置一个比较大的数。GBDT具有很优美的理论基础，一般而言性能更有优势。关于GBDT算法的原理请参考我的前一篇博文《GBDT算法原理深入解析》。 基于树的集成算法还有">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-04-02T02:43:36.876Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tree ensemble算法的特征重要度计算">
+<meta name="twitter:description" content="集成学习因具有预测精度高的优势而受到广泛关注，尤其是使用决策树作为基学习器的集成学习算法。树的集成算法的著名代码有随机森林和GBDT。随机森林具有很好的抵抗过拟合的特性，并且参数（决策树的个数）对预测性能的影响较小，调参比较容易，一般设置一个比较大的数。GBDT具有很优美的理论基础，一般而言性能更有优势。关于GBDT算法的原理请参考我的前一篇博文《GBDT算法原理深入解析》。 基于树的集成算法还有">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小毛驴" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="http://xudongyang.coding.me/tree-ensemble-importance/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Tree ensemble算法的特征重要度计算 | 小毛驴</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c57513996270ce211928f7fe0c7a5483";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小毛驴</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Adventure may hurt you, but monotony will kill you.</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-essays">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/essays" rel="section"><i class="menu-item-icon fa fa-fw fa-newspaper-o"></i> <br>essays</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/tree-ensemble-importance/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Tree ensemble算法的特征重要度计算
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2016-12-27 13:58:55" itemprop="dateCreated datePublished" datetime="2016-12-27T13:58:55+08:00">2016-12-27</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/" itemprop="url" rel="index"><span itemprop="name">机器学习</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/特征工程/" itemprop="url" rel="index"><span itemprop="name">特征工程</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/tree-ensemble-importance/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/tree-ensemble-importance/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>集成学习因具有预测精度高的优势而受到广泛关注，尤其是使用决策树作为基学习器的集成学习算法。树的集成算法的著名代码有随机森林和GBDT。随机森林具有很好的抵抗过拟合的特性，并且参数（决策树的个数）对预测性能的影响较小，调参比较容易，一般设置一个比较大的数。GBDT具有很优美的理论基础，一般而言性能更有优势。关于GBDT算法的原理请参考我的前一篇博文<a href="/gbdt/" title="《GBDT算法原理深入解析》">《GBDT算法原理深入解析》</a>。</p>
+<p>基于树的集成算法还有一个很好的特性，就是模型训练结束后可以输出模型所使用的特征的相对重要度，便于我们选择特征，理解哪些因素是对预测有关键影响，这在某些领域（如生物信息学、神经系统科学等）特别重要。本文主要介绍基于树的集成算法如何计算各特征的相对重要度。<br><a id="more"></a></p>
+<h2 id="使用boosted-tree作为学习算法的优势："><a href="#使用boosted-tree作为学习算法的优势：" class="headerlink" title="使用boosted tree作为学习算法的优势："></a>使用boosted tree作为学习算法的优势：</h2><ul>
+<li>使用不同类型的数据时，不需要做特征标准化/归一化</li>
+<li>可以很容易平衡运行时效率和精度；比如，使用boosted tree作为在线预测的模型可以在机器资源紧张的时候截断参与预测的树的数量从而提高预测效率</li>
+<li>学习模型可以输出特征的相对重要程度，可以作为一种特征选择的方法</li>
+<li>模型可解释性好</li>
+<li>对数据字段缺失不敏感</li>
+<li>能够自动做多组特征间的interaction，具有很好的非性线性</li>
+</ul>
+<h2 id="特征重要度的计算"><a href="#特征重要度的计算" class="headerlink" title="特征重要度的计算"></a>特征重要度的计算</h2><p>Friedman在GBM的论文中提出的方法：</p>
+<p>特征$j$的全局重要度通过特征$j$在单颗树中的重要度的平均值来衡量：</p>
+<script type="math/tex; mode=display">\hat{J_{j}^2}=\frac1M \sum_{m=1}^M\hat{J_{j}^2}(T_m)</script><p>其中，M是树的数量。特征$j$在单颗树中的重要度的如下：</p>
+<script type="math/tex; mode=display">\hat{J_{j}^2}(T)=\sum\limits_{t=1}^{L-1} \hat{i_{t}^2} 1(v_{t}=j)</script><p>其中，$L$为树的叶子节点数量，$L-1$即为树的非叶子节点数量（构建的树都是具有左右孩子的二叉树），$v_{t}$是和节点$t$相关联的特征，$\hat{i_{t}^2}$是节点$t$分裂之后平方损失的减少值。</p>
+<h2 id="实现代码片段"><a href="#实现代码片段" class="headerlink" title="实现代码片段"></a>实现代码片段</h2><p>为了更好的理解特征重要度的计算方法，下面给出scikit-learn工具包中的实现，代码移除了一些不相关的部分。</p>
+<p>下面的代码来自于GradientBoostingClassifier对象的feature_importances属性的计算方法：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">feature_importances_</span><span class="params">(self)</span>:</span></span><br><span class="line">    total_sum = np.zeros((self.n_features, ), dtype=np.float64)</span><br><span class="line">    <span class="keyword">for</span> tree <span class="keyword">in</span> self.estimators_:</span><br><span class="line">        total_sum += tree.feature_importances_ </span><br><span class="line">    importances = total_sum / len(self.estimators_)</span><br><span class="line">    <span class="keyword">return</span> importances</span><br></pre></td></tr></table></figure></p>
+<p>其中，self.estimators_是算法构建出的决策树的数组，tree.feature_importances_ 是单棵树的特征重要度向量，其计算方法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">cpdef compute_feature_importances(self, normalize=True):</span><br><span class="line">    &quot;&quot;&quot;Computes the importance of each feature (aka variable).&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    while node != end_node:</span><br><span class="line">        if node.left_child != _TREE_LEAF:</span><br><span class="line">            # ... and node.right_child != _TREE_LEAF:</span><br><span class="line">            left = &amp;nodes[node.left_child]</span><br><span class="line">            right = &amp;nodes[node.right_child]</span><br><span class="line"></span><br><span class="line">            importance_data[node.feature] += (</span><br><span class="line">                node.weighted_n_node_samples * node.impurity -</span><br><span class="line">                left.weighted_n_node_samples * left.impurity -</span><br><span class="line">                right.weighted_n_node_samples * right.impurity)</span><br><span class="line">        node += 1</span><br><span class="line"></span><br><span class="line">    importances /= nodes[0].weighted_n_node_samples</span><br><span class="line"></span><br><span class="line">    return importances</span><br></pre></td></tr></table></figure></p>
+<p>上面的代码经过了简化，保留了核心思想。计算所有的非叶子节点在分裂时加权不纯度的减少，减少得越多说明特征越重要。</p>
+<p>不纯度的减少实际上就是该节点此次分裂的收益，因此我们也可以这样理解，节点分裂时收益越大，该节点对应的特征的重要度越高。关于收益的定义请参考我的前一篇博文<a href="https://www.zybuluo.com/yxd/note/611571" target="_blank" rel="noopener">《GBDT算法原理深入解析》</a>中的等式(9)的定义。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>[1] <a href="https://pdfs.semanticscholar.org/156e/3c979e7bc25381fdd0614d1bab60b7aa5dfd.pdf" target="_blank" rel="noopener">Feature Selection for Ranking using Boosted Trees</a><br>[2] <a href="http://alicezheng.org/papers/gbfs.pdf" target="_blank" rel="noopener">Gradient Boosted Feature Selection</a><br>[3] <a href="http://www.jmlr.org/papers/volume10/tuv09a/tuv09a.pdf" target="_blank" rel="noopener">Feature Selection with Ensembles, Artificial Variables, and Redundancy Elimination</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/GBDT/" rel="tag"># GBDT</a>
+          
+            <a href="/tags/集成学习/" rel="tag"># 集成学习</a>
+          
+            <a href="/tags/特征重要度/" rel="tag"># 特征重要度</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/gbdt/" rel="next" title="GBDT算法原理深入解析">
+                <i class="fa fa-chevron-left"></i> GBDT算法原理深入解析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/math-in-hexo/" rel="prev" title="在Hexo中渲染MathJax数学公式">
+                在Hexo中渲染MathJax数学公式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yangxudong</p>
+              <div class="site-description motion-element" itemprop="description">勤劳的小毛驴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">37</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://weibo.com/u/1192649764" title="微博 &rarr; http://weibo.com/u/1192649764" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.jianshu.com/users/4e1990280df6/latest_articles" title="简书 &rarr; http://www.jianshu.com/users/4e1990280df6/latest_articles" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i>简书</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://zhuanlan.zhihu.com/yangxudong" title="知乎 &rarr; https://zhuanlan.zhihu.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-medapps"></i>知乎</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://blog.csdn.net/yangxudong" title="CSDN &rarr; http://blog.csdn.net/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.cnblogs.com/yangxudong/" title="博客园 &rarr; http://www.cnblogs.com/yangxudong/" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss-square"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/yangxudong" title="GitHub &rarr; https://github.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:yangxudongsuda@gmail.com" title="E-Mail &rarr; mailto:yangxudongsuda@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope-o"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用boosted-tree作为学习算法的优势："><span class="nav-number">1.</span> <span class="nav-text">使用boosted tree作为学习算法的优势：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#特征重要度的计算"><span class="nav-number">2.</span> <span class="nav-text">特征重要度的计算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现代码片段"><span class="nav-number">3.</span> <span class="nav-text">实现代码片段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yangxudong</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    <!-- LOCAL: You can save these files to your site and update links -->
+
+  
+  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
+<!-- END LOCAL -->
+
+<script>
+  function renderGitment() {
+    var gitment = new Gitmint({
+      id: window.location.pathname,
+      owner: 'yangxudong',
+      repo: 'yangxudong.github.io',
+      
+        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+      
+      oauth: {
+      
+      
+        client_secret: '5bb7f33cc97a00106138632b133b361eca31b0fc',
+      
+        client_id: 'a6f099e5dd8b15032ace'
+      }
+    });
+    gitment.render('gitment-container');
+  }
+
+  
+    renderGitment();
+  
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

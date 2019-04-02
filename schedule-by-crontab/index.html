@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/my_carton.png?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="虽然现在越来越多的开源机器学习工具支持分布式训练，但分布式机器学习平台的搭建和运维的门槛通常是比较高的。另外一方面，有一些业务场景的训练数据其实并不是很大，在一台普通的开发机上训练个把小时足矣。单机的机器学习工具使用起来通常要比分布式平台好用很多。 特征工程在机器学习任务中占了很大的一部分比重，使用hive sql这样的高级语言处理起来比较方面和快捷。因此，通常特征工程、样本构建都在离线分布式集">
+<meta name="keywords" content="调度,hadoop,hive,crontab">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用crontab调度hadoop任务和机器学习任务的正确姿势">
+<meta property="og:url" content="http://xudongyang.coding.me/schedule-by-crontab/index.html">
+<meta property="og:site_name" content="小毛驴">
+<meta property="og:description" content="虽然现在越来越多的开源机器学习工具支持分布式训练，但分布式机器学习平台的搭建和运维的门槛通常是比较高的。另外一方面，有一些业务场景的训练数据其实并不是很大，在一台普通的开发机上训练个把小时足矣。单机的机器学习工具使用起来通常要比分布式平台好用很多。 特征工程在机器学习任务中占了很大的一部分比重，使用hive sql这样的高级语言处理起来比较方面和快捷。因此，通常特征工程、样本构建都在离线分布式集">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://xudongyang.coding.me/schedule-by-crontab/flow.jpg">
+<meta property="og:updated_time" content="2019-04-02T02:43:36.858Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用crontab调度hadoop任务和机器学习任务的正确姿势">
+<meta name="twitter:description" content="虽然现在越来越多的开源机器学习工具支持分布式训练，但分布式机器学习平台的搭建和运维的门槛通常是比较高的。另外一方面，有一些业务场景的训练数据其实并不是很大，在一台普通的开发机上训练个把小时足矣。单机的机器学习工具使用起来通常要比分布式平台好用很多。 特征工程在机器学习任务中占了很大的一部分比重，使用hive sql这样的高级语言处理起来比较方面和快捷。因此，通常特征工程、样本构建都在离线分布式集">
+<meta name="twitter:image" content="http://xudongyang.coding.me/schedule-by-crontab/flow.jpg">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小毛驴" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="http://xudongyang.coding.me/schedule-by-crontab/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>使用crontab调度hadoop任务和机器学习任务的正确姿势 | 小毛驴</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c57513996270ce211928f7fe0c7a5483";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小毛驴</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Adventure may hurt you, but monotony will kill you.</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-essays">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/essays" rel="section"><i class="menu-item-icon fa fa-fw fa-newspaper-o"></i> <br>essays</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/schedule-by-crontab/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">使用crontab调度hadoop任务和机器学习任务的正确姿势
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-10-28 15:07:30" itemprop="dateCreated datePublished" datetime="2017-10-28T15:07:30+08:00">2017-10-28</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/程序设计/" itemprop="url" rel="index"><span itemprop="name">程序设计</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/程序设计/shell/" itemprop="url" rel="index"><span itemprop="name">shell</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/schedule-by-crontab/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/schedule-by-crontab/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="/schedule-by-crontab/flow.jpg" alt="icon"></p>
+<p>虽然现在越来越多的开源机器学习工具支持分布式训练，但分布式机器学习平台的搭建和运维的门槛通常是比较高的。另外一方面，有一些业务场景的训练数据其实并不是很大，在一台普通的开发机上训练个把小时足矣。单机的机器学习工具使用起来通常要比分布式平台好用很多。</p>
+<p>特征工程在机器学习任务中占了很大的一部分比重，使用hive sql这样的高级语言处理起来比较方面和快捷。因此，通常特征工程、样本构建都在离线分布式集群（hive集群）上完成，训练任务在数据量不大时可以在gateway机器上完成。这就涉及到几个问题：</p>
+<ol>
+<li>gateway机器上的daily训练任务什么时候开始执行？</li>
+<li>模型训练结束，并对新数据做出预测后如何把数据上传到分布式集群？</li>
+<li>如何通知后置任务开始执行？<a id="more"></a>
+对于第一个问题，理想的解决方案是公司大数据平台的调度系统能够调度某台具体gateway上部署的任务，并且可以获取任务执行的状态，在任务执行成功后可以自动调度后置任务。然而，有时候调度系统还没有这么智能的时候，就需要我们自己想办法解决了。Crontab是Unix和类Unix的操作系统中用于设置周期性被执行的指令的工具。使用Crontab可以每天定时启动任务。美中不足在于必须要自己检查前置任务是否已经结束，也就是说我们要的数据有没有产出，同时还要有一个让后置任务等待当前任务结束的机制。</li>
+</ol>
+<h2 id="检查前置任务是否已经结束"><a href="#检查前置任务是否已经结束" class="headerlink" title="检查前置任务是否已经结束"></a>检查前置任务是否已经结束</h2><p>如果前置任务是hive任务，那么结束标志通常是一个hive表产生了特定分区，我们只需要检查这个分区是否存在就可以了。有个问题需要注意的是，可能在hive任务执行过程中分区已经产生，但任务没有完全结束前数据还没有写完，这个时候启动后续任务是不正确。解决办法就是在任务结束时为当前表添加一个空的“标志分区”，比如原来的分区是“pt=20170921”，我们可以添加一个空的分区“pt=20170921.done”（分区字段的类型为string时可用），或者“pt=-20170921”（分区字段的类型为int时可用）。然后，crontab调度的后置任务需要检查这个“标志分区”是否存在。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> log_info()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> [ <span class="string">"<span class="variable">$LOG_LEVEL</span>"</span> != <span class="string">"WARN"</span> ] &amp;&amp; [ <span class="string">"<span class="variable">$LOG_LEVEL</span>"</span> != <span class="string">"ERROR"</span> ]</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"`date +"</span>%Y-%m-%d %H:%M:%S<span class="string">"` [INFO] ($$)(<span class="variable">$USER</span>): $*"</span>;</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="function"><span class="title">check_partition</span></span>() &#123;</span><br><span class="line">   log_info <span class="string">"function [<span class="variable">$FUNCNAME</span>] begin"</span></span><br><span class="line">   <span class="comment">#table,dt</span></span><br><span class="line">   temp=`hive -e <span class="string">"show partitions <span class="variable">$1</span>"</span>`</span><br><span class="line">   <span class="built_in">echo</span> <span class="variable">$temp</span>|grep -wq <span class="string">"<span class="variable">$2</span>"</span></span><br><span class="line">   <span class="keyword">if</span> [ $? -eq 0 ];<span class="keyword">then</span></span><br><span class="line">       log_info <span class="string">"<span class="variable">$1</span> parition <span class="variable">$2</span> exists, ok"</span></span><br><span class="line">       <span class="built_in">return</span> 0</span><br><span class="line">   <span class="keyword">else</span></span><br><span class="line">       log_info <span class="string">"<span class="variable">$1</span> parition <span class="variable">$2</span> doesn't exists"</span></span><br><span class="line">       <span class="built_in">return</span> 1</span><br><span class="line">   <span class="keyword">fi</span>  </span><br><span class="line">   log_info <span class="string">"function [<span class="variable">$FUNCNAME</span>] end"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果前置任务是MapReduce或者Spark任务，那么结束标志通常是在HDFS上产出了一个特定的路径，后置任务只需要检查这个特定路径是否存在就可以。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## 功能: 检查给定的文件或目录在hadoop上是否存在</span></span><br><span class="line"><span class="comment">## $1 文件或者目录, 不支持*号通配符</span></span><br><span class="line"><span class="comment">## $? return 0 if file exist, none-0 otherwise</span></span><br><span class="line"><span class="keyword">function</span> hadoop_check_file_exist()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">## check params</span></span><br><span class="line">    <span class="keyword">if</span> [ <span class="variable">$#</span> -ne 1 ]</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        log_info <span class="string">"Unexpected params for hadoop_check_file_exist() function! Usage: hadoop_check_file_exist &lt;dir_or_file&gt;"</span>;</span><br><span class="line">        <span class="built_in">return</span> 1;</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">## do it</span></span><br><span class="line">    log_info <span class="string">"<span class="variable">$&#123;HADOOP_EXEC&#125;</span> --config <span class="variable">$&#123;HADOOP_CONF&#125;</span> fs -test -e <span class="variable">$1</span>"</span></span><br><span class="line">    <span class="variable">$&#123;HADOOP_EXEC&#125;</span> --config <span class="variable">$&#123;HADOOP_CONF&#125;</span> fs -<span class="built_in">test</span> -e <span class="string">"<span class="variable">$1</span>"</span></span><br><span class="line">    <span class="built_in">local</span> ret=$?</span><br><span class="line">    <span class="keyword">if</span> [ <span class="variable">$ret</span> -eq 0 ]</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        log_info <span class="string">"<span class="variable">$1</span> does exist on Hadoop"</span></span><br><span class="line">        <span class="built_in">return</span> 0;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        log_info <span class="string">"(<span class="variable">$ret</span>)<span class="variable">$1</span> does NOT exist on Hadoop"</span></span><br><span class="line">        <span class="built_in">return</span> 2;</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line">    <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其实，hive任务的表的内容也是存储在HDFS上，因此也可以用检查HDFS路径的方法，来判断前置hive任务是否已经结束。可以用下面命令查看hive表对应的HDFS路径。<br><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">hive</span> -e <span class="string">"desc formatted <span class="variable">$tablename</span>;"</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="循环等待前置任务结束"><a href="#循环等待前置任务结束" class="headerlink" title="循环等待前置任务结束"></a>循环等待前置任务结束</h2><p>当前置任务还没有结束时，需要循环等待。有两种方法，一种是自己在Bash脚本里写代码，如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">hadoop_check_file_exist <span class="string">"<span class="variable">$hbase_dir</span>/<span class="variable">$table_name</span>/pt=-<span class="variable">$bizdate</span>"</span></span><br><span class="line"><span class="keyword">while</span> [ $? -ne 0 ] </span><br><span class="line"><span class="keyword">do</span>  </span><br><span class="line">  <span class="built_in">local</span> hh=`date <span class="string">'+%H'</span>`</span><br><span class="line">  <span class="keyword">if</span> [ <span class="variable">$hh</span> -gt 23 ]</span><br><span class="line">  <span class="keyword">then</span></span><br><span class="line">      <span class="built_in">echo</span> <span class="string">"timeout, partition still not exist"</span></span><br><span class="line">      <span class="built_in">exit</span> 1</span><br><span class="line">  <span class="keyword">fi</span>  </span><br><span class="line">  log_info <span class="string">"<span class="variable">$hbase_dir</span>/<span class="variable">$table_name</span>/pt=-<span class="variable">$bizdate</span> doesn't exist, wait for a while"</span></span><br><span class="line">  sleep 5m</span><br><span class="line">  hadoop_check_file_exist <span class="string">"<span class="variable">$hbase_dir</span>/<span class="variable">$table_name</span>/pt=-<span class="variable">$bizdate</span>"</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure></p>
+<p>第二种方法，是利用crontab的周期性调度功能。比如可以让crontab每隔5分钟调度一次任务。这个时候需要注意的是，可能前一次调度的进程还没有执行结束，后一次调度就已经开始。这个时候可以使用linux flock文件锁实现任务锁定，解决冲突。<br><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">flock [<span class="string">-sxon</span>][<span class="symbol">-w #</span>] file [-c] command</span><br><span class="line">-s, --shared:    获得一个共享锁</span><br><span class="line">-x, --exclusive: 获得一个独占锁</span><br><span class="line">-u, --unlock:    移除一个锁，通常是不需要的，脚本执行完会自动丢弃锁</span><br><span class="line">-n, --nonblock:  如果没有立即获得锁，直接失败而不是等待</span><br><span class="line">-w, --timeout:   如果没有立即获得锁，等待指定时间</span><br><span class="line">-o, --close:     在运行命令前关闭文件的描述符号。用于如果命令产生子进程时会不受锁的管控</span><br><span class="line">-c, --command:   在shell中运行一个单独的命令</span><br><span class="line">-h, --help       显示帮助</span><br><span class="line">-V, --version:   显示版本</span><br></pre></td></tr></table></figure></p>
+<p>其中，file是一个空文件即可。比如，crontab文件可以这样写：<br><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*<span class="regexp">/5 6-23 * * * flock -xn /</span>tmp<span class="regexp">/pop_score.lock -c 'bash /</span>home<span class="regexp">/xudong.yang/</span>pop_score<span class="regexp">/train/m</span>ain.sh -T -p -c &gt;<span class="regexp">/dev/</span><span class="keyword">null</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span><span class="string">'</span></span><br></pre></td></tr></table></figure></p>
+<p>如果使用这种方法，脚本里面检查前置任务没有结束时就直接退出当前进程即可，像下面这样：<br><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">hadoop_check_file_exist <span class="string">"$hbase_dir/$table_name/pt=-$bizdate"</span></span><br><span class="line"><span class="keyword">if</span> [ $? -ne <span class="number">0</span> ]; then</span><br><span class="line">  log_info <span class="string">"$hbase_dir/$table_name/pt=-$bizdate doesn't exist, wait for a while"</span></span><br><span class="line">  <span class="keyword">exit</span> <span class="number">1</span></span><br><span class="line">fi</span><br></pre></td></tr></table></figure></p>
+<p>虽然文件锁能解决crontab调度冲突的问题，但是我们只希望脚本被成功执行一次，任务结束之后，后续的调度直接退出。还有一种情况需要考虑，有可能crontab调度的任务的正在运行，这个时候我们自己也手动启动了同样的任务，如何避免这样的冲突呢？</p>
+<p>无非就是要有个标记任务已经成功运行或者正在运行标识能够在脚本里读取，如何做到呢？对就是在指定目录下建立特定名称的空文件。在脚本开始的时候坚持标记文件是否存在，存在就直接退出。在任务正常运行结束的时候touch成功执行的标记。结构大概如下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 变量定义等</span></span><br><span class="line">......</span><br><span class="line">[ -f <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/DONE ] &amp;&amp; &#123; log_info <span class="string">"DONE file exists, exit"</span> &gt;&gt; <span class="variable">$log_file_path</span>; <span class="built_in">exit</span> 0; &#125;</span><br><span class="line">[ -f <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/RUNNING ] &amp;&amp; &#123; log_info <span class="string">"RUNNING file exists, exit"</span> &gt;&gt; <span class="variable">$log_file_path</span>; <span class="built_in">exit</span> 0; &#125;</span><br><span class="line"></span><br><span class="line">touch <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/RUNNING</span><br><span class="line"><span class="built_in">trap</span> <span class="string">"rm -f <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/RUNNING; echo Bye."</span> EXIT QUIT ABRT INT HUP TERM</span><br><span class="line"><span class="comment"># do something here</span></span><br><span class="line">......</span><br><span class="line"><span class="keyword">if</span> [ -f <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/RUNNING ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    mv <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/RUNNING <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/DONE</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    touch <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/DONE</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"><span class="built_in">exit</span> 0;</span><br></pre></td></tr></table></figure></p>
+<p>有了RUNNING标记就不怕手动执行任务时和crontab调度冲突了；有了DONE标记就不怕每天的任务被调度多次了。</p>
+<h2 id="从分布式集群下载数据"><a href="#从分布式集群下载数据" class="headerlink" title="从分布式集群下载数据"></a>从分布式集群下载数据</h2><p>从hdfs下载数据的函数：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## 功能: 将hadoop上的文件下载到本地并merge到一个文件中</span></span><br><span class="line"><span class="comment">## $1 hadoop叶子目录 或 文件名--支持通配符 (*)</span></span><br><span class="line"><span class="comment">## $2 本地文件名</span></span><br><span class="line"><span class="comment">## $? return 0 if success, none-0 otherwise</span></span><br><span class="line"><span class="keyword">function</span> hadoop_getmerge()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">## check params</span></span><br><span class="line">    <span class="keyword">if</span> [ <span class="variable">$#</span> -ne 2 ]</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        log_info <span class="string">"Unexpected params for hadoop_getmerge() function! Usage: hadoop_getmerge &lt;hadoop_file&gt; &lt;local_file&gt;"</span>;</span><br><span class="line">        <span class="built_in">return</span> 1;</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> [ -f <span class="variable">$2</span> ]</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        log_info <span class="string">"Can not do hadoop_getmerge because local file <span class="variable">$2</span> already exists!"</span></span><br><span class="line">        <span class="built_in">return</span> 2;</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">## do it</span></span><br><span class="line">    <span class="variable">$&#123;HADOOP_EXEC&#125;</span> --config <span class="variable">$&#123;HADOOP_CONF&#125;</span> fs -getmerge <span class="variable">$1</span> <span class="variable">$2</span>;</span><br><span class="line">    <span class="keyword">if</span> [ $? -ne 0 ]</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        log_info <span class="string">"Do hadoop_getmerge FAILED! Source: <span class="variable">$1</span>, target: <span class="variable">$2</span>"</span>;</span><br><span class="line">        <span class="built_in">return</span> 3;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        log_info <span class="string">"Do hadoop_getmerge OK! Source: <span class="variable">$1</span>, target: <span class="variable">$2</span>"</span>;</span><br><span class="line">        <span class="built_in">return</span> 0;</span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>HIVE表里的数据也可以先找到对应的HDFS目录，然后用上面的函数下载数据，唯一需要注意的是，HIVE表必须stored as textfile，否则下载下来的数据不可用。<br>万一hive表不是已文本文件的格式存储的怎么办呢？不要紧，还是有办法的，如下：<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p <span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/raw</span><br><span class="line">declare <span class="attribute">sql</span>=<span class="string">"</span></span><br><span class="line"><span class="string">  set hive.support.quoted.identifiers=None;</span></span><br><span class="line"><span class="string">  insert overwrite local directory '<span class="variable">$data_home</span>/<span class="variable">$bizdate</span>/raw'</span></span><br><span class="line"><span class="string">  row format delimited fields terminated by '\t'</span></span><br><span class="line"><span class="string">  select \`(pt)?+.+\` from <span class="variable">$table_name</span> where pt=<span class="variable">$bizdate</span>; </span></span><br><span class="line"><span class="string">"</span></span><br><span class="line">log_info <span class="variable">$sql</span></span><br><span class="line"><span class="variable">$hive</span> -e <span class="string">"<span class="variable">$sql</span>"</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="上传数据到分布式集群"><a href="#上传数据到分布式集群" class="headerlink" title="上传数据到分布式集群"></a>上传数据到分布式集群</h2><p>模型训练和预测之后，必须把预测数据上传到分布式集群，以便后续处理。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">local create_table_sql="</span><br><span class="line">  <span class="keyword">create</span> <span class="keyword">table</span> <span class="keyword">if</span> <span class="keyword">not</span> <span class="keyword">exists</span> $target_table_name (</span><br><span class="line">      ......</span><br><span class="line">  )</span><br><span class="line">  partitioned <span class="keyword">by</span> (pt <span class="built_in">int</span>)</span><br><span class="line">  <span class="keyword">row</span> <span class="keyword">format</span> <span class="keyword">delimited</span> <span class="keyword">fields</span> <span class="keyword">terminated</span> <span class="keyword">by</span> <span class="string">'\t'</span> </span><br><span class="line">  <span class="keyword">lines</span> <span class="keyword">terminated</span> <span class="keyword">by</span> <span class="string">'\n'</span> </span><br><span class="line">  <span class="keyword">stored</span> <span class="keyword">as</span> textfile;</span><br><span class="line">"</span><br><span class="line">log_info $create_table_sql</span><br><span class="line">$hive -e "$create_table_sql"</span><br><span class="line"></span><br><span class="line">local upload_sql="<span class="keyword">load</span> <span class="keyword">data</span> <span class="keyword">local</span> inpath <span class="string">'$data_home/$bizdate/$predict_file'</span> <span class="keyword">into</span> <span class="keyword">table</span> $target_table_name <span class="keyword">partition</span>(pt=$&#123;bizdate&#125;);"</span><br><span class="line">log_info $upload_sql</span><br><span class="line">$hive -e "$upload_sql"</span><br></pre></td></tr></table></figure></p>
+<h2 id="通知后置任务开始执行"><a href="#通知后置任务开始执行" class="headerlink" title="通知后置任务开始执行"></a>通知后置任务开始执行</h2><p>其实crontab没法通知后置任务当前任务已经结束，那怎么办呢？</p>
+<p>把真正的后置任务加一个前置依赖任务，而这个依赖任务是部署在调度系统上的一个shell任务，该任务的前置任务是crontab调度任务的前置任务，并且这个任务做的唯一一件事情就是循环检查crontab调度任务的数据有没有产出，已经产出就结束，没有产出就sleep一小段时间之后再继续检查。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">check_partition <span class="variable">$table_name</span> <span class="variable">$bizdate</span></span><br><span class="line"><span class="keyword">while</span> [ $? -ne 0 ] </span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">  sleep 5m</span><br><span class="line">  hh=`date <span class="string">'+%H'</span>`</span><br><span class="line">  <span class="keyword">if</span> [ <span class="variable">$hh</span> -gt 23 ]</span><br><span class="line">  <span class="keyword">then</span></span><br><span class="line">      <span class="built_in">echo</span> <span class="string">"timeout, partition still not exist"</span></span><br><span class="line">      <span class="built_in">exit</span> 1</span><br><span class="line">  <span class="keyword">fi</span>  </span><br><span class="line">  check_partition <span class="variable">$table_name</span> <span class="variable">$bizdate</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+<h2 id="那些年，我们踩过的坑"><a href="#那些年，我们踩过的坑" class="headerlink" title="那些年，我们踩过的坑"></a>那些年，我们踩过的坑</h2><p>一、crontab调度任务不会自动export环境变量</p>
+<p>开始的时候，手动执行脚本正常运行，但是crontab调度每次都会在<code>hadoop fs -test -e $path</code>命令执行出错，表现为明明<code>$path</code>已经存在，但指令总是返回1，而不是0 。经过苦苦排查之后才发现，hadoop依赖的环境变量JAVA_HOME和HADOOP_HOME没有在脚本里导入。而用户在终端里登录到服务器上时，这2个环境变量是自动导入的。所以，务必记得在脚本开始的时候就导入环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="built_in">export</span> JAVA_HOME=/usr/<span class="built_in">local</span>/jdk</span><br><span class="line"><span class="built_in">export</span> HADOOP_HOME=...</span><br></pre></td></tr></table></figure>
+<p>二、crontab调度任务不能写太多标准输出，否则任务会在某个时刻自动中断</p>
+<p>这个也挺坑的，务必记得在crontab的指令里重定向标准输出和标准错误到一个文件里，或者重定向到unix的黑洞<code>/dev/null</code>里。</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*<span class="regexp">/5 6-23 * * * flock -xn /</span>tmp<span class="regexp">/pop_score.lock -c 'bash /</span>home<span class="regexp">/xudong.yang/</span>pop_score<span class="regexp">/train/m</span>ain.sh -T -p -c &gt;<span class="regexp">/dev/</span><span class="keyword">null</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span><span class="string">'</span></span><br></pre></td></tr></table></figure>
+<p>这里推荐在脚本使用tee命令同时输出日志到终端和文件，这样用户手动执行的时候可以直接在终端里看到程序的执行情况，crontab调度里可以查看日志文件来排查问题。当然，输出到终端的部分，在使用crontab调度时需要重定向到黑洞里。<br><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">main | tee -a <span class="variable">$log_file_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$&#123;PIPESTATUS[0]&#125;</span> -ne <span class="number">0</span> ]</span><br><span class="line">then</span><br><span class="line">    log_error <span class="string">"run failed."</span></span><br><span class="line">    <span class="keyword">exit</span> <span class="number">1</span>;</span><br><span class="line">fi</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/调度/" rel="tag"># 调度</a>
+          
+            <a href="/tags/hadoop/" rel="tag"># hadoop</a>
+          
+            <a href="/tags/hive/" rel="tag"># hive</a>
+          
+            <a href="/tags/crontab/" rel="tag"># crontab</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/traffic-control/" rel="next" title="电商平台商家流量分配机制">
+                <i class="fa fa-chevron-left"></i> 电商平台商家流量分配机制
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/ctr-models/" rel="prev" title="主流CTR预估模型的演化及对比">
+                主流CTR预估模型的演化及对比 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yangxudong</p>
+              <div class="site-description motion-element" itemprop="description">勤劳的小毛驴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">37</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://weibo.com/u/1192649764" title="微博 &rarr; http://weibo.com/u/1192649764" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.jianshu.com/users/4e1990280df6/latest_articles" title="简书 &rarr; http://www.jianshu.com/users/4e1990280df6/latest_articles" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i>简书</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://zhuanlan.zhihu.com/yangxudong" title="知乎 &rarr; https://zhuanlan.zhihu.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-medapps"></i>知乎</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://blog.csdn.net/yangxudong" title="CSDN &rarr; http://blog.csdn.net/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.cnblogs.com/yangxudong/" title="博客园 &rarr; http://www.cnblogs.com/yangxudong/" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss-square"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/yangxudong" title="GitHub &rarr; https://github.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:yangxudongsuda@gmail.com" title="E-Mail &rarr; mailto:yangxudongsuda@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope-o"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#检查前置任务是否已经结束"><span class="nav-number">1.</span> <span class="nav-text">检查前置任务是否已经结束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环等待前置任务结束"><span class="nav-number">2.</span> <span class="nav-text">循环等待前置任务结束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从分布式集群下载数据"><span class="nav-number">3.</span> <span class="nav-text">从分布式集群下载数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#上传数据到分布式集群"><span class="nav-number">4.</span> <span class="nav-text">上传数据到分布式集群</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#通知后置任务开始执行"><span class="nav-number">5.</span> <span class="nav-text">通知后置任务开始执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#那些年，我们踩过的坑"><span class="nav-number">6.</span> <span class="nav-text">那些年，我们踩过的坑</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yangxudong</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    <!-- LOCAL: You can save these files to your site and update links -->
+
+  
+  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
+<!-- END LOCAL -->
+
+<script>
+  function renderGitment() {
+    var gitment = new Gitmint({
+      id: window.location.pathname,
+      owner: 'yangxudong',
+      repo: 'yangxudong.github.io',
+      
+        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+      
+      oauth: {
+      
+      
+        client_secret: '5bb7f33cc97a00106138632b133b361eca31b0fc',
+      
+        client_id: 'a6f099e5dd8b15032ace'
+      }
+    });
+    gitment.render('gitment-container');
+  }
+
+  
+    renderGitment();
+  
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

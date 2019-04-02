@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/my_carton.png?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="背景本文主要针对广告检索领域的查询重写应用，根据查询-广告点击二部图，在MapReduce框架上实现SimRank++算法，关于SimRank++算法的背景和原理请参看前一篇文章《SimRank++算法原理解析》。关于权值转移概率矩阵的实现请参看另一位文章《用hadoop实现SimRank++算法(1)----权值转移矩阵的计算》。 准备工作在广告检索系统的查询重写应用中，对象分为两种类型：查询和">
+<meta name="keywords" content="SimRank,SimRank++,相似性度量">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用hadoop实现SimRank++算法(2)---- 算法迭代过程">
+<meta property="og:url" content="http://xudongyang.coding.me/simrank-iteration/index.html">
+<meta property="og:site_name" content="小毛驴">
+<meta property="og:description" content="背景本文主要针对广告检索领域的查询重写应用，根据查询-广告点击二部图，在MapReduce框架上实现SimRank++算法，关于SimRank++算法的背景和原理请参看前一篇文章《SimRank++算法原理解析》。关于权值转移概率矩阵的实现请参看另一位文章《用hadoop实现SimRank++算法(1)----权值转移矩阵的计算》。 准备工作在广告检索系统的查询重写应用中，对象分为两种类型：查询和">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://xudongyang.coding.me/simrank-iteration/bipartite-graph.png">
+<meta property="og:updated_time" content="2019-04-02T02:43:36.864Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="用hadoop实现SimRank++算法(2)---- 算法迭代过程">
+<meta name="twitter:description" content="背景本文主要针对广告检索领域的查询重写应用，根据查询-广告点击二部图，在MapReduce框架上实现SimRank++算法，关于SimRank++算法的背景和原理请参看前一篇文章《SimRank++算法原理解析》。关于权值转移概率矩阵的实现请参看另一位文章《用hadoop实现SimRank++算法(1)----权值转移矩阵的计算》。 准备工作在广告检索系统的查询重写应用中，对象分为两种类型：查询和">
+<meta name="twitter:image" content="http://xudongyang.coding.me/simrank-iteration/bipartite-graph.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小毛驴" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="http://xudongyang.coding.me/simrank-iteration/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>用hadoop实现SimRank++算法(2)---- 算法迭代过程 | 小毛驴</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c57513996270ce211928f7fe0c7a5483";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小毛驴</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Adventure may hurt you, but monotony will kill you.</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-essays">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/essays" rel="section"><i class="menu-item-icon fa fa-fw fa-newspaper-o"></i> <br>essays</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/simrank-iteration/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">用hadoop实现SimRank++算法(2)---- 算法迭代过程
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2013-03-18 22:21:50" itemprop="dateCreated datePublished" datetime="2013-03-18T22:21:50+08:00">2013-03-18</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/数据挖掘/" itemprop="url" rel="index"><span itemprop="name">数据挖掘</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/simrank-iteration/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/simrank-iteration/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>本文主要针对广告检索领域的查询重写应用，根据查询-广告点击二部图，在MapReduce框架上实现SimRank++算法，关于SimRank++算法的背景和原理请参看前一篇文章《<a href="/simrank-plus-plus/" title="SimRank++算法原理解析">SimRank++算法原理解析</a>》。关于权值转移概率矩阵的实现请参看另一位文章《<a href="/simrank-weight-matrix/" title="用hadoop实现SimRank++算法(1)----权值转移矩阵的计算">用hadoop实现SimRank++算法(1)----权值转移矩阵的计算</a>》。</p>
+<h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><p>在广告检索系统的查询重写应用中，对象分为两种类型：查询和广告。对象间的关系为点击关系。关系图为二部图，图中的每一条边表示在相应的查询下点击了对应的广告，边的权值为点击次数。下图表示由3个查询和2个广告构成的完全二部图，图中略去了边的权值。</p>
+<p><img src="/simrank-iteration/bipartite-graph.png" alt="qa"></p>
+<a id="more"></a>
+<p>其对应的权值矩阵为：</p>
+<script type="math/tex; mode=display">P=\left[\begin{array}{ccc:cc}
+0 & 0 & 0 & w_{q_1a_1} & w_{q_1a_2} \\
+0 & 0 & 0 & w_{q_2a_1} & w_{q_2a_2} \\
+0 & 0 & 0 & w_{q_3a_1} & w_{q_3a_2} \\
+\hdashline
+w_{a_1q_1} & w_{a_1q_2} & w_{a_1q_3} & 0 & 0 \\
+w_{a_2q_1} & w_{a_2q_2} & w_{a_2q_3} & 0 & 0
+\end{array}\right]</script><p>把矩阵P右上角的非零子矩阵记为Q2A，左下角的非零子矩阵记为A2Q，则矩阵P可以写成分块矩阵的形式：$P=\left[ \begin{smallmatrix}0 &amp; Q2A \\ A2Q &amp; 0 \end{smallmatrix} \right]$</p>
+<p>对应的矩阵P的转置矩阵为：$P^T=\left[ \begin{smallmatrix}0 &amp; (A2Q)^T \\ (Q2A)^T &amp; 0 \end{smallmatrix} \right]$</p>
+<p>假设算法在第$k$轮迭代时计算出的相似性分数矩阵为：</p>
+<script type="math/tex; mode=display">S_k=\left[\begin{array}{ccc:cc}
+1 & s_{q_1q_2}^k & s_{q_1q_3}^k & 0 & 0 \\
+s_{q_2q_1}^k & 1 & s_{q_2q_3}^k & 0 & 0 \\
+s_{q_3q_1}^k & s_{q_3q_2}^k & 1 & 0 & 0 \\
+\hdashline
+0 & 0 & 0 & 1 & s_{a_1a_2}^k \\
+0 & 0 & 0 & s_{a_2a_1}^k & 1
+\end{array}\right]</script><p>把矩阵$S_k$的左上角的非零子矩阵记为$(Q-Q)^k$，右下角的非零子矩阵记为$(A-A)^k$，则矩阵$S_k$可以简写为：$S_k=\left[ \begin{smallmatrix}(Q-Q)^k &amp; 0 \\ 0 &amp; (A-A)^k \end{smallmatrix} \right]$</p>
+<p>根据SimRank++算法的计算公式可得，</p>
+<script type="math/tex; mode=display">\begin{align} P^T \cdot S_k \cdot P &= \begin{bmatrix}
+0 & (A2Q)^T(A-A)^k \\
+(Q2A)^T(Q-Q)^k & 0
+\end{bmatrix} \cdot \begin{bmatrix}
+0 & Q2A \\
+A2Q & 0
+\end{bmatrix} \\
+&= \begin{bmatrix}
+(A2Q)^T(A-A)^k(A2Q) & 0 \\
+ 0 & (Q2A)^T(Q-Q)^k(Q2A)
+\end{bmatrix}
+\end{align}</script><p>所以，二部图的相似性计算可以拆分成两部分：</p>
+<script type="math/tex; mode=display">(Q-Q)^{k+1}=c \cdot (A2Q)^T(A-A)^k(A2Q) + I_{N(q)} - Diag(c \cdot (A2Q)^T(A-A)^k(A2Q))</script><script type="math/tex; mode=display">(A-A)^{k+1}=c \cdot (Q2A)^T(Q-Q)^k(Q2A) + I_{N(a)} - Diag(c \cdot (Q2A)^T(Q-Q)^k(Q2A))</script><p>其中， 操作符$Diag(M)$表示把矩阵$M$的非对角线元素全部都置为0得到的新矩阵，$N(q)$是参加计算的Query总数量，$N(a)$是参与计算的广告总数量。为了计算方便，公式可以变换为：</p>
+<script type="math/tex; mode=display">(Q-Q)^{k+1}=c \cdot ((A-A)^k(A2Q))^T(A2Q) + I_{N(q)} - Diag(c \cdot ((A-A)^k(A2Q))^T(A2Q))</script><script type="math/tex; mode=display">(A-A)^{k+1}=c \cdot ((Q-Q)^k(Q2A))^T(Q2A) + I_{N(a)} - Diag(c \cdot ((Q-Q)^k(Q2A))^T(Q2A))</script><p>其中，$(A-A)^0=I_{N(a)}$，$(Q-Q)^0=I_{N(q)}$。</p>
+<p>由于矩阵$(Q-Q)$和矩阵$(A-A)$的规模与原始的权值矩阵P相比，减少了很多。这样，通过把SimRank++算法的每一步都拆分成两个独立的操作，大大减少了算法操作数的规模，提高了算法的伸缩性。</p>
+<h1 id="迭代计算"><a href="#迭代计算" class="headerlink" title="迭代计算"></a>迭代计算</h1><p>由于SimRank算法依赖于矩阵乘法运算，因此这里用一个函数封装矩阵乘法运算MapReduce作业。函数的声明和主要参数如下：</p>
+<blockquote>
+<p>MatrixMultiply(String inputPathA, String inputPathB, String outputDirPath, double decayFactor, boolean transA, boolean trans_multiply_self, boolean symm_result, …)</p>
+</blockquote>
+<p>参数的含义如下表所示：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>inputPathA</td>
+<td>矩阵乘法的左操作数（矩阵A）的输入文件或目录</td>
+</tr>
+<tr>
+<td>inputPathB</td>
+<td>矩阵乘法的右操作数（矩阵B）的输入文件或目录</td>
+</tr>
+<tr>
+<td>outputDirPath</td>
+<td>运算结果的输出目录</td>
+</tr>
+<tr>
+<td>decayFactor</td>
+<td>SimRank算法的衰减因子，默认值为1.0</td>
+</tr>
+<tr>
+<td>transA</td>
+<td>标识是否要在乘法运算前转置矩阵A</td>
+</tr>
+<tr>
+<td>trans_multiply_self</td>
+<td>若为真，则计算AT * A（忽略inputPathB参数）</td>
+</tr>
+<tr>
+<td>symm_result</td>
+<td>标识输出结果是否为对称矩阵，若为真，则只输出上（或下）对角阵</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>迭代计算的算法会产生大量的中间结果。对过期的中间结果应及时清理，否则占用的HDFS空间很可能会超过运行算法的账户配额，导致算法中途停止。我们通过输出输出目录的重复使用来及时清理中间结果。假设“MatrixMultiply”函数会在输出前自动删除outputDirPath目录内的所有内容。</p>
+<p>计算两两Query之间的相似性分数的函数伪代码如下表所示：<br><figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">computeQ2Q(curr_iter)&#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="number">0</span> == curr_iter)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="attr">inputPathA</span> = inputPath_W_A2Q;</span><br><span class="line">		<span class="attr">inputPathB</span> = <span class="literal">null</span>;</span><br><span class="line">		<span class="attr">outputPath</span> = outputPath_S_Q2Q;</span><br><span class="line">		MatrixMultiply(inputPathA, inputPathB, outputPath, decay_factor, <span class="literal">true</span>, <span class="literal">true</span>, <span class="literal">true</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="attr">inputPathA</span> = outputPath_S_A2A;</span><br><span class="line">		<span class="attr">inputPathB</span> = inputPath_W_A2Q;</span><br><span class="line">		<span class="attr">outputPath</span> = outputPath_M_Q2Q;</span><br><span class="line">		MatrixMultiply(inputPathA, inputPathB, outputPath, <span class="number">1.0</span>, <span class="literal">false</span>, <span class="literal">false</span>, <span class="literal">false</span>);</span><br><span class="line">		<span class="attr">inputPathA</span> = outputPath_M_Q2Q;</span><br><span class="line">		<span class="attr">outputPath</span> = outputPath_S_Q2Q2;</span><br><span class="line">		MatrixMultiply(inputPathA, inputPathB, outputPath, decay_factor, <span class="literal">true</span>, <span class="literal">false</span>, <span class="literal">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>计算两两Ad之间的相似性分数的函数伪代码如下所示：</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">computeA2A(curr_iter)&#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="number">0</span> == curr_iter)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="attr">inputPathA</span> = inputPath_W_Q2A;</span><br><span class="line">		<span class="attr">inputPathB</span> = <span class="literal">null</span>;</span><br><span class="line">		<span class="attr">outputPath</span> = outputPath_S_A2A;</span><br><span class="line">		MatrixMultiply(inputPathA, inputPathB, outputPath, decay_factor, <span class="literal">true</span>, <span class="literal">true</span>, <span class="literal">true</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="attr">inputPathA</span> = outputPath_S_Q2Q;</span><br><span class="line">		<span class="attr">inputPathB</span> = inputPath_W_Q2A;</span><br><span class="line">		<span class="attr">outputPath</span> = outputPath_M_A2A;</span><br><span class="line">		MatrixMultiply(inputPathA, inputPathB, outputPath, <span class="number">1.0</span>, <span class="literal">false</span>, <span class="literal">false</span>, <span class="literal">false</span>);</span><br><span class="line">		<span class="attr">inputPathA</span> = outputPath_M_A2A;</span><br><span class="line">		<span class="attr">outputPath</span> = outputPath_S_A2A;</span><br><span class="line">		MatrixMultiply(inputPathA, inputPathB, outputPath, decay_factor, <span class="literal">true</span>, <span class="literal">false</span>, <span class="literal">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>SimRank迭代计算的伪代码如下：<br><figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curr_iter = <span class="number">0</span></span><br><span class="line"><span class="keyword">while</span> <span class="comment">(curr_iter &lt; iter_times)</span></span><br><span class="line">&#123;</span><br><span class="line">	computeQ<span class="number">2</span>Q<span class="comment">(curr_iter)</span>;</span><br><span class="line">	computeA<span class="number">2</span>A<span class="comment">(curr_iter)</span>;</span><br><span class="line">	curr_iter++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="系列文章"><a href="#系列文章" class="headerlink" title="系列文章"></a>系列文章</h1><ul>
+<li><a href="/simrank-plus-plus/" title="SimRank++算法原理深入解析">SimRank++算法原理深入解析</a></li>
+<li><a href="/simrank-weight-matrix/" title="用hadoop实现SimRank++算法(1)----权值转移矩阵的计算">用hadoop实现SimRank++算法(1)----权值转移矩阵的计算</a></li>
+<li><a href="/simrank-iteration/" title="用hadoop实现SimRank++算法(2)---- 算法迭代过程">用hadoop实现SimRank++算法(2)---- 算法迭代过程</a></li>
+<li><a href="/simrank-evidence/" title="用hadoop实现SimRank++算法(3)---- evidence矩阵的计算及性能优化总结">用hadoop实现SimRank++算法(3)---- evidence矩阵的计算及性能优化总结</a>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/SimRank/" rel="tag"># SimRank</a>
+          
+            <a href="/tags/SimRank/" rel="tag"># SimRank++</a>
+          
+            <a href="/tags/相似性度量/" rel="tag"># 相似性度量</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/simrank-weight-matrix/" rel="next" title="用hadoop实现SimRank++算法(1)----权值转移矩阵的计算">
+                <i class="fa fa-chevron-left"></i> 用hadoop实现SimRank++算法(1)----权值转移矩阵的计算
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/simrank-evidence/" rel="prev" title="用hadoop实现SimRank++算法(3)---- evidence矩阵的计算及性能优化总结">
+                用hadoop实现SimRank++算法(3)---- evidence矩阵的计算及性能优化总结 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yangxudong</p>
+              <div class="site-description motion-element" itemprop="description">勤劳的小毛驴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">37</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://weibo.com/u/1192649764" title="微博 &rarr; http://weibo.com/u/1192649764" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.jianshu.com/users/4e1990280df6/latest_articles" title="简书 &rarr; http://www.jianshu.com/users/4e1990280df6/latest_articles" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i>简书</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://zhuanlan.zhihu.com/yangxudong" title="知乎 &rarr; https://zhuanlan.zhihu.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-medapps"></i>知乎</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://blog.csdn.net/yangxudong" title="CSDN &rarr; http://blog.csdn.net/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.cnblogs.com/yangxudong/" title="博客园 &rarr; http://www.cnblogs.com/yangxudong/" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss-square"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/yangxudong" title="GitHub &rarr; https://github.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:yangxudongsuda@gmail.com" title="E-Mail &rarr; mailto:yangxudongsuda@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope-o"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#准备工作"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#迭代计算"><span class="nav-number">3.</span> <span class="nav-text">迭代计算</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#系列文章"><span class="nav-number">4.</span> <span class="nav-text">系列文章</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yangxudong</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    <!-- LOCAL: You can save these files to your site and update links -->
+
+  
+  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
+<!-- END LOCAL -->
+
+<script>
+  function renderGitment() {
+    var gitment = new Gitmint({
+      id: window.location.pathname,
+      owner: 'yangxudong',
+      repo: 'yangxudong.github.io',
+      
+        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+      
+      oauth: {
+      
+      
+        client_secret: '5bb7f33cc97a00106138632b133b361eca31b0fc',
+      
+        client_id: 'a6f099e5dd8b15032ace'
+      }
+    });
+    gitment.render('gitment-container');
+  }
+
+  
+    renderGitment();
+  
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

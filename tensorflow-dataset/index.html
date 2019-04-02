@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/my_carton.png?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="在TensorFlow 1.3版本之前，读取数据一般有两种方法：  使用placeholder + feed_dict读内存中的数据 使用文件名队列（string_input_producer）与内存队列（reader）读硬盘中的数据  Dataset API同时支持从内存和硬盘的数据读取，相比之前的两种方法在语法上更加简洁易懂。Dataset API可以更方便地与其他高阶API配合，快速搭建网络">
+<meta name="keywords" content="深度学习,tensorflow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于Tensorflow高阶API构建大规模分布式深度学习模型系列:基于Dataset API处理Input pipeline">
+<meta property="og:url" content="http://xudongyang.coding.me/tensorflow-dataset/index.html">
+<meta property="og:site_name" content="小毛驴">
+<meta property="og:description" content="在TensorFlow 1.3版本之前，读取数据一般有两种方法：  使用placeholder + feed_dict读内存中的数据 使用文件名队列（string_input_producer）与内存队列（reader）读硬盘中的数据  Dataset API同时支持从内存和硬盘的数据读取，相比之前的两种方法在语法上更加简洁易懂。Dataset API可以更方便地与其他高阶API配合，快速搭建网络">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-f9f42cc5c00573f7baaa815795f1ce45_hd.jpg">
+<meta property="og:updated_time" content="2019-04-02T02:43:36.870Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于Tensorflow高阶API构建大规模分布式深度学习模型系列:基于Dataset API处理Input pipeline">
+<meta name="twitter:description" content="在TensorFlow 1.3版本之前，读取数据一般有两种方法：  使用placeholder + feed_dict读内存中的数据 使用文件名队列（string_input_producer）与内存队列（reader）读硬盘中的数据  Dataset API同时支持从内存和硬盘的数据读取，相比之前的两种方法在语法上更加简洁易懂。Dataset API可以更方便地与其他高阶API配合，快速搭建网络">
+<meta name="twitter:image" content="https://pic2.zhimg.com/80/v2-f9f42cc5c00573f7baaa815795f1ce45_hd.jpg">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小毛驴" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="http://xudongyang.coding.me/tensorflow-dataset/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>基于Tensorflow高阶API构建大规模分布式深度学习模型系列:基于Dataset API处理Input pipeline | 小毛驴</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c57513996270ce211928f7fe0c7a5483";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小毛驴</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Adventure may hurt you, but monotony will kill you.</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-essays">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/essays" rel="section"><i class="menu-item-icon fa fa-fw fa-newspaper-o"></i> <br>essays</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/tensorflow-dataset/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">基于Tensorflow高阶API构建大规模分布式深度学习模型系列:基于Dataset API处理Input pipeline
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-07-08 10:23:02" itemprop="dateCreated datePublished" datetime="2018-07-08T10:23:02+08:00">2018-07-08</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/" itemprop="url" rel="index"><span itemprop="name">机器学习</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/深度学习/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/tensorflow-dataset/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/tensorflow-dataset/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在TensorFlow 1.3版本之前，读取数据一般有两种方法：</p>
+<ul>
+<li>使用placeholder + feed_dict读内存中的数据</li>
+<li>使用文件名队列（string_input_producer）与内存队列（reader）读硬盘中的数据</li>
+</ul>
+<p>Dataset API同时支持从内存和硬盘的数据读取，相比之前的两种方法在语法上更加简洁易懂。Dataset API可以更方便地与其他高阶API配合，快速搭建网络模型。此外，如果想要用到TensorFlow新出的Eager模式，就必须要使用Dataset API来读取数据。</p>
+<p><strong>Dataset可以看作是相同类型“元素”的有序列表</strong>。在实际使用时，单个“元素”可以是向量，也可以是字符串、图片，甚至是tuple或者dict。</p>
+<a id="more"></a>
+<h3 id="从内存中读取数据"><a href="#从内存中读取数据" class="headerlink" title="从内存中读取数据"></a>从内存中读取数据</h3><p>用tf.data.Dataset.from_tensor_slices创建了一个最简单的Dataset：<br><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="title">dataset</span> = tf.<span class="class"><span class="keyword">data</span>.<span class="type">Dataset</span>.from_tensor_slices(<span class="title">np</span>.<span class="title">array</span>([1.0, 2.0, 3.0, 4.0, 5.0]))</span></span><br></pre></td></tr></table></figure></p>
+<p>如何将这个dataset中的元素取出呢？方法是从Dataset中实例化一个Iterator，然后对Iterator进行迭代。<br><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">iterator</span> = dataset.make_one_shot_iterator()</span><br><span class="line">one_element = <span class="keyword">iterator</span>.get_next()</span><br><span class="line"><span class="keyword">with</span> tf.<span class="type">Session</span>() <span class="keyword">as</span> sess:</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>):</span><br><span class="line">        print(sess.run(one_element))</span><br></pre></td></tr></table></figure></p>
+<p>由于Tensorflow采用了符号式编程（symbolic style programs）模式，而非常见的命令式编程（imperative style programs）模式，因此必须创建一个Session对象才能运行程序。上述代码中，one_element只是一个Tensor，并不是一个实际的值。调用sess.run(one_element)后，才能真正地取出一个值。如果一个dataset中元素被读取完了，再尝试sess.run(one_element)的话，就会抛出tf.errors.OutOfRangeError异常，这个行为与使用队列方式读取数据的行为是一致的。</p>
+<p>其实，<strong>tf.data.Dataset.from_tensor_slices的功能不止如此，它的真正作用是切分传入Tensor的第一个维度，生成相应的dataset</strong>。例如：<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dataset = tf<span class="selector-class">.data</span><span class="selector-class">.Dataset</span><span class="selector-class">.from_tensor_slices</span>(np<span class="selector-class">.random</span><span class="selector-class">.uniform</span>(size=(<span class="number">5</span>, <span class="number">2</span>)))</span><br></pre></td></tr></table></figure></p>
+<p>传入的数值是一个矩阵，它的形状为(5, 2)，tf.data.Dataset.from_tensor_slices就会切分它形状上的第一个维度，最后生成的dataset中一个含有5个元素，每个元素的形状是(2, )，即每个元素是矩阵的一行。</p>
+<p>下面我们来看看如何从Dict中构建dataset:<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dataset = tf<span class="selector-class">.data</span><span class="selector-class">.Dataset</span><span class="selector-class">.from_tensor_slices</span>(</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"a"</span>: np.array([<span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>, <span class="number">5.0</span>]),</span><br><span class="line">        <span class="string">"b"</span>: np<span class="selector-class">.random</span><span class="selector-class">.uniform</span>(size=(<span class="number">5</span>, <span class="number">2</span>))</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p>这时函数会分别切分”a”中的数值以及”b”中的数值，最终dataset中的一个元素就是类似于{“a”: 1.0, “b”: [0.9, 0.1]}的形式。</p>
+<h3 id="从文件中读取数据"><a href="#从文件中读取数据" class="headerlink" title="从文件中读取数据"></a>从文件中读取数据</h3><p>在实际应用中，模型的训练和评估数据总是以文件的形式存在文件系统中，目前Dataset API提供了三种从文件读取数据并创建Dataset的方式，分别用来读取不同存储格式的文件。<br><img src="https://pic2.zhimg.com/80/v2-f9f42cc5c00573f7baaa815795f1ce45_hd.jpg" alt></p>
+<ul>
+<li>tf.data.TextLineDataset()：这个函数的输入是一个文件的列表，输出是一个dataset。dataset中的每一个元素就对应了文件中的一行。可以使用这个函数来读入CSV文件。</li>
+<li>tf.data.FixedLengthRecordDataset()：这个函数的输入是一个文件的列表和一个record_bytes，之后dataset的每一个元素就是文件中固定字节数record_bytes的内容。通常用来读取以二进制形式保存的文件，如CIFAR10数据集就是这种形式。</li>
+<li>tf.data.TFRecordDataset()：顾名思义，这个函数是用来读TFRecord文件的，dataset中的每一个元素就是一个TFExample。</li>
+</ul>
+<p>需要说明的是，这三种读取文件数据创建dataset的方法，不仅能读取本地文件系统中的文件，还能读取分布式文件系统（如HDFS）中的文件，这为模型的分布式训练创造了良好的条件。</p>
+<h3 id="Dataset的常用Transformation操作"><a href="#Dataset的常用Transformation操作" class="headerlink" title="Dataset的常用Transformation操作"></a>Dataset的常用Transformation操作</h3><p>一个Dataset通过数据变换操作可以生成一个新的Dataset。下面介绍数据格式变换、过滤、数据打乱、生产batch和epoch等常用Transformation操作。</p>
+<h4 id="（1）map"><a href="#（1）map" class="headerlink" title="（1）map"></a>（1）map</h4><p>map接收一个函数，Dataset中的每个元素都会被当作这个函数的输入，并将函数返回值作为新的Dataset，如我们可以对dataset中每个元素的值取平方：<br><figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dataset = tf.data.Dataset.from_tensor_slices(np.array([1.0, 2.0, 3.0, 4.0, 5.0]))</span><br><span class="line">dataset = dataset.map(lambda x: x * x) <span class="comment"># 1.0, 4.0, 9.0, 16.0, 25.0</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="（2）filter"><a href="#（2）filter" class="headerlink" title="（2）filter"></a>（2）filter</h4><p>filter操作可以过滤掉dataset不满足条件的元素，它接受一个布尔函数作为参数，dataset中的每个元素都作为该布尔函数的参数，布尔函数返回True的元素保留下来，布尔函数返回False的元素则被过滤掉。<br><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">dataset</span> = dataset.filter(filter_func)</span><br></pre></td></tr></table></figure></p>
+<h4 id="（3）shuffle"><a href="#（3）shuffle" class="headerlink" title="（3）shuffle"></a>（3）shuffle</h4><p>shuffle功能为打乱dataset中的元素，它有一个参数buffer_size，表示打乱时使用的buffer的大小：<br><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">dataset</span> = dataset.shuffle(buffer_size=<span class="number">10000</span>)</span><br></pre></td></tr></table></figure></p>
+<h4 id="（4）repeat"><a href="#（4）repeat" class="headerlink" title="（4）repeat"></a>（4）repeat</h4><p>repeat的功能就是将整个序列重复多次，主要用来处理机器学习中的epoch，假设原先的数据是一个epoch，使用repeat(5)就可以将之变成5个epoch：<br><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">dataset</span> = dataset.repeat(<span class="number">5</span>)</span><br></pre></td></tr></table></figure></p>
+<p>如果直接调用repeat()的话，生成的序列就会无限重复下去，没有结束，因此也不会抛出tf.errors.OutOfRangeError异常。</p>
+<h4 id="（5）batch"><a href="#（5）batch" class="headerlink" title="（5）batch"></a>（5）batch</h4><p>batch就是将多个元素组合成batch，如下面的程序将dataset中的每个元素组成了大小为32的batch：<br><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">dataset</span> = dataset.batch(<span class="number">32</span>)</span><br></pre></td></tr></table></figure></p>
+<p>需要注意的是，必须要保证dataset中每个元素拥有相同的shape才能调用batch方法，否则会抛出异常。在调用map方法转换元素格式的时候尤其要注意这一点。</p>
+<h3 id="Dataset元素变换案例"><a href="#Dataset元素变换案例" class="headerlink" title="Dataset元素变换案例"></a>Dataset元素变换案例</h3><h4 id="1-解析CSV文件"><a href="#1-解析CSV文件" class="headerlink" title="1. 解析CSV文件"></a>1. 解析CSV文件</h4><p>假设我们有一个Tab分隔4个字段的文件，则可用如下的代码解析并生成dataset。<br><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">_CSV_COLUMNS = [<span class="string">'field1'</span>, <span class="string">'field2'</span>, <span class="string">'field3'</span>, <span class="string">'field4'</span>]</span><br><span class="line">_CSV_COLUMN_DEFAULTS=[[<span class="string">''</span>], [<span class="string">''</span>], [<span class="number">0.0</span>], [<span class="number">0.0</span>]]</span><br><span class="line"></span><br><span class="line">def input_fn(data_file, shuffle, batch_size):</span><br><span class="line">  def parse_csv(value):</span><br><span class="line">    columns = <span class="keyword">tf</span>.decode_csv(value, record_defaults=_CSV_COLUMN_DEFAULTS, field_delim=<span class="string">'\t'</span>)</span><br><span class="line">    features = dict(zip(_CSV_COLUMNS, columns))</span><br><span class="line">    labels = features.<span class="keyword">pop</span>(<span class="string">'ctr_flag'</span>)</span><br><span class="line">    <span class="keyword">return</span> features, <span class="keyword">tf</span>.equal(labels, <span class="string">'1.0'</span>)</span><br><span class="line"></span><br><span class="line">  # Extract lines from <span class="built_in">input</span> <span class="keyword">files</span> using the Dataset API.</span><br><span class="line">  dataset = <span class="keyword">tf</span>.data.TextLineDataset(data_file)</span><br><span class="line">  <span class="keyword">if</span> shuffle: dataset = dataset.shuffle(buffer_size=<span class="number">100000</span>)</span><br><span class="line">  dataset = dataset.<span class="keyword">map</span>(parse_csv, num_parallel_calls=<span class="number">100</span>)</span><br><span class="line">  # We <span class="keyword">call</span> <span class="built_in">repeat</span> after shuffling, rather than before, <span class="keyword">to</span> prevent separate</span><br><span class="line">  # epochs from blending together.</span><br><span class="line">  dataset = dataset.<span class="built_in">repeat</span>()</span><br><span class="line">  dataset = dataset.batch(batch_size)</span><br><span class="line">  <span class="keyword">return</span> dataset</span><br></pre></td></tr></table></figure></p>
+<p>上述代码主要利用tf.decode_csv函数来把CSV文件记录转换为Tensors列表，每一列对应一个Tensor。</p>
+<h4 id="2-解析特殊格式的文本文件"><a href="#2-解析特殊格式的文本文件" class="headerlink" title="2. 解析特殊格式的文本文件"></a>2. 解析特殊格式的文本文件</h4><p>有时候我们的训练数据可能有特殊的格式，比如CVS文件其中某些字段是JSON格式的字符串，我们要把JSON字符串的内容也解析出来，这个时候tf.decode_csv函数就不够用了。</p>
+<p>是时候请万能函数tf.py_func上场了，tf.py_func函数能够把一个任意的python函数封装成tensorflow的op，提供了极大的灵活性，其定义如下：<br><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tf.py_func(</span><br><span class="line">    func,</span><br><span class="line">    inp,</span><br><span class="line">    Tout,</span><br><span class="line">    <span class="attribute">stateful</span>=<span class="literal">True</span>,</span><br><span class="line">    <span class="attribute">name</span>=None</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p>tf.py_func的核心是一个func函数(由用户自己定义)，该函数被封装成graph中的一个节点（op)。第二个参数inp是一个由Tensor组成的list，在执行时，inp的各个Tensor的值被取出来传给func作为参数。func的返回值会被tf.py_func转换为Tensors，这些Tensors的类型由Tout指定。当func只有一个返回值时，Tout是一个单独的tensorflow数据类型；当func函数有多个返回值时，Tout是一个tensorflow数据类型组成的元组或列表。参数stateful表示func函数是否有状态（产生副作用）。</p>
+<p>在使用过程中，有几个需要注意的地方：</p>
+<ul>
+<li>func函数的返回值类型一定要和Tout指定的tensor类型一致。</li>
+<li>tf.py_func中的func是脱离Graph的，在func中不能定义可训练的参数参与网络训练(反传)。</li>
+<li>tf.py_func操作只能在CPU上运行；如果使用分布式TensorFlow，tf.py_func操作必须放在与客户端相同进程的CPU设备上。</li>
+<li>tf.py_func操作返回的tensors是没有定义形状（shape）的，必须调用set_shape方法为各个返回值设置shape，才能参与后续的计算。</li>
+</ul>
+<p>先来看一个简单的示例，func函数接受单个参数并产生单个返回值的情况。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">filter_func</span><span class="params">(line)</span>:</span></span><br><span class="line">  fields = line.decode().split(<span class="string">"\t"</span>)</span><br><span class="line">  <span class="keyword">if</span> len(fields) &lt; <span class="number">8</span>:</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">  <span class="keyword">for</span> field <span class="keyword">in</span> fields:</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> field:</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">dataset = dataset.filter(<span class="keyword">lambda</span> x: tf.py_func(filter_func, [x], tf.bool, <span class="literal">False</span>))</span><br></pre></td></tr></table></figure></p>
+<p>再来看一个稍微复杂一点的例子，该例子解析一个带有json格式字段的CSV文件，json字段被平铺开来和其他字段并列作为返回值。<br><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</span><br><span class="line"></span><br><span class="line">def parse_line(line):</span><br><span class="line">  _COLUMNS = [<span class="string">"sellerId"</span>, <span class="string">"brandId"</span>, <span class="string">"cateId"</span>]</span><br><span class="line">  _INT_COLUMNS = [<span class="string">"click"</span>, <span class="string">"productId"</span>, <span class="string">"matchType"</span>, <span class="string">"position"</span>, <span class="string">"hour"</span>]</span><br><span class="line">  _FLOAT_COLUMNS = [<span class="string">"matchScore"</span>, <span class="string">"popScore"</span>, <span class="string">"brandPrefer"</span>, <span class="string">"catePrefer"</span>]</span><br><span class="line">  _STRING_COLUMNS = [<span class="string">"phoneResolution"</span>, <span class="string">"phoneBrand"</span>, <span class="string">"phoneOs"</span>]</span><br><span class="line">  _SEQ_COLUMNS = [<span class="string">"behaviorC1ids"</span>, <span class="string">"behaviorBids"</span>, <span class="string">"behaviorCids"</span>, <span class="string">"behaviorPids"</span>]</span><br><span class="line"></span><br><span class="line">  def get_content(record):</span><br><span class="line">    <span class="keyword">import</span> datetime</span><br><span class="line">    fields = record.decode().split(<span class="string">"\t"</span>)</span><br><span class="line">    <span class="keyword">if</span> len(fields) &lt; <span class="number">8</span>:</span><br><span class="line">      <span class="keyword">raise</span> <span class="type">ValueError</span>(<span class="string">"invalid record %s"</span> % record)</span><br><span class="line">    <span class="keyword">for</span> field <span class="keyword">in</span> fields:</span><br><span class="line">      <span class="keyword">if</span> <span class="keyword">not</span> field:</span><br><span class="line">        <span class="keyword">raise</span> <span class="type">ValueError</span>(<span class="string">"invalid record %s"</span> % record)</span><br><span class="line">    fea = json.loads(fields[<span class="number">1</span>])</span><br><span class="line">    <span class="keyword">if</span> fea[<span class="string">"time"</span>]:</span><br><span class="line">      dt = datetime.datetime.fromtimestamp(fea[<span class="string">"time"</span>])</span><br><span class="line">      fea[<span class="string">"hour"</span>] = dt.hour</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">      fea[<span class="string">"hour"</span>] = <span class="number">0</span></span><br><span class="line">    seq_len = <span class="number">10</span></span><br><span class="line">    <span class="keyword">for</span> x <span class="keyword">in</span> _SEQ_COLUMNS:</span><br><span class="line">      sequence = fea.setdefault(x, [])</span><br><span class="line">      n = len(sequence)</span><br><span class="line">      <span class="keyword">if</span> n &lt; seq_len:</span><br><span class="line">        sequence.extend([-<span class="number">1</span>] * (seq_len - n))</span><br><span class="line">      <span class="keyword">elif</span> n &gt; seq_len:</span><br><span class="line">        fea[x] = sequence[:seq_len]</span><br><span class="line">      seq_len = <span class="number">20</span></span><br><span class="line"></span><br><span class="line">    elems = [np.<span class="built_in">int64</span>(fields[<span class="number">2</span>]), np.<span class="built_in">int64</span>(fields[<span class="number">3</span>]), np.<span class="built_in">int64</span>(fields[<span class="number">4</span>]), np.<span class="built_in">int64</span>(fields[<span class="number">6</span>]), fields[<span class="number">7</span>]]</span><br><span class="line">    elems += [np.<span class="built_in">int64</span>(fea.get(x, <span class="number">0</span>)) <span class="keyword">for</span> x <span class="keyword">in</span> _INT_COLUMNS]</span><br><span class="line">    elems += [np.<span class="built_in">float32</span>(fea.get(x, <span class="number">0</span>.<span class="number">0</span>)) <span class="keyword">for</span> x <span class="keyword">in</span> _FLOAT_COLUMNS]</span><br><span class="line">    elems += [fea.get(x, <span class="string">""</span>) <span class="keyword">for</span> x <span class="keyword">in</span> _STRING_COLUMNS]</span><br><span class="line">    elems += [np.<span class="built_in">int64</span>(fea[x]) <span class="keyword">for</span> x <span class="keyword">in</span> _SEQ_COLUMNS]</span><br><span class="line">    <span class="keyword">return</span> elems</span><br><span class="line"></span><br><span class="line">  out_type = [tf.<span class="built_in">int64</span>] * <span class="number">4</span> + [tf.<span class="built_in">string</span>] + [tf.<span class="built_in">int64</span>] * len(_INT_COLUMNS) + [tf.<span class="built_in">float32</span>] * len(_FLOAT_COLUMNS) + [</span><br><span class="line">    tf.<span class="built_in">string</span>] * len(_STRING_COLUMNS) + [tf.<span class="built_in">int64</span>] * len(_SEQ_COLUMNS)</span><br><span class="line">  <span class="literal">result</span> = tf.py_func(get_content, [line], out_type)</span><br><span class="line">  n = len(<span class="literal">result</span>) - len(_SEQ_COLUMNS)</span><br><span class="line">  <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(n):</span><br><span class="line">    <span class="literal">result</span>[i].set_shape([])</span><br><span class="line">  <span class="literal">result</span>[n].set_shape([<span class="number">10</span>])</span><br><span class="line">  <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(n + <span class="number">1</span>, len(<span class="literal">result</span>)):</span><br><span class="line">    <span class="literal">result</span>[i].set_shape([<span class="number">20</span>])</span><br><span class="line">  columns = _COLUMNS + _INT_COLUMNS + _FLOAT_COLUMNS + _STRING_COLUMNS + _SEQ_COLUMNS</span><br><span class="line">  features = dict(zip(columns, <span class="literal">result</span>))</span><br><span class="line">  labels = features.pop('click')</span><br><span class="line">  <span class="keyword">return</span> features, labels</span><br><span class="line"></span><br><span class="line">def my_input_fn(filenames, batch_size, shuffle_buffer_size):</span><br><span class="line">  dataset = tf.data.<span class="type">TextLineDataset</span>(filenames)</span><br><span class="line">  dataset = dataset.filter(lambda x: tf.py_func(filter_func, [x], tf.<span class="built_in">bool</span>, <span class="type">False</span>))</span><br><span class="line">  dataset = dataset.map(parse_line, num_parallel_calls=<span class="number">100</span>)</span><br><span class="line">  <span class="comment"># Shuffle, repeat, and batch the examples.</span></span><br><span class="line">  <span class="keyword">if</span> shuffle_buffer_size &gt; <span class="number">0</span>:</span><br><span class="line">    dataset = dataset.shuffle(shuffle_buffer_size)</span><br><span class="line">  dataset = dataset.repeat().batch(batch_size)</span><br><span class="line">  <span class="keyword">return</span> dataset</span><br></pre></td></tr></table></figure></p>
+<h4 id="3-解析TFRECORD文件"><a href="#3-解析TFRECORD文件" class="headerlink" title="3. 解析TFRECORD文件"></a>3. 解析TFRECORD文件</h4><p>Tfrecord是tensorflow官方推荐的训练数据存储格式，它更容易与网络应用架构相匹配。</p>
+<p>Tfrecord本质上是二进制的Protobuf数据，因而其读取、传输的速度更快。Tfrecord文件的每一条记录都是一个<code>tf.train.Example</code>的实例。<code>tf.train.Example</code>的proto格式的定义如下：<br><figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Example</span> </span>&#123;</span><br><span class="line">  Features features = <span class="number">1</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Features</span> </span>&#123;</span><br><span class="line">  map&lt;<span class="built_in">string</span>, Feature&gt; feature = <span class="number">1</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Feature</span> </span>&#123;</span><br><span class="line">  <span class="keyword">oneof</span> kind &#123;</span><br><span class="line">    BytesList bytes_list = <span class="number">1</span>;</span><br><span class="line">    FloatList float_list = <span class="number">2</span>;</span><br><span class="line">    Int64List int64_list = <span class="number">3</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>使用tfrecord文件格式的另一个好处是数据结构统一，屏蔽了底层的数据结构。在类似于图像分类的任务中，原始数据是各个图片以单独的小文件的形式存在，label又以文件夹的形式存在，处理这样的数据比较麻烦，比如随机打乱，分batch等操作；而所有原始数据转换为一个或几个单独的tfrecord文件后处理起来就会比较方便。</p>
+<p>来看看tensorflow读取tfrecord文件并转化为训练features和labels的代码：<br><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">def parse_exmp(serial_exmp):</span><br><span class="line">  features = &#123;</span><br><span class="line">    <span class="string">"click"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"behaviorBids"</span>: <span class="keyword">tf</span>.FixedLenFeature([<span class="number">20</span>], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"behaviorCids"</span>: <span class="keyword">tf</span>.FixedLenFeature([<span class="number">20</span>], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"behaviorC1ids"</span>: <span class="keyword">tf</span>.FixedLenFeature([<span class="number">10</span>], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"behaviorSids"</span>: <span class="keyword">tf</span>.FixedLenFeature([<span class="number">20</span>], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"behaviorPids"</span>: <span class="keyword">tf</span>.FixedLenFeature([<span class="number">20</span>], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"productId"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"sellerId"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"brandId"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"cate1Id"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"cateId"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.int64),</span><br><span class="line">    <span class="string">"tab"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.<span class="built_in">string</span>),</span><br><span class="line">    <span class="string">"matchType"</span>: <span class="keyword">tf</span>.FixedLenFeature([], <span class="keyword">tf</span>.int64)</span><br><span class="line">  &#125;</span><br><span class="line">  feats = <span class="keyword">tf</span>.parse_single_example(serial_exmp, features=features)</span><br><span class="line">  labels = feats.<span class="keyword">pop</span>(<span class="string">'click'</span>)</span><br><span class="line">  <span class="keyword">return</span> feats, labels</span><br><span class="line"></span><br><span class="line">def train_input_fn(filenames, batch_size, shuffle_buffer_size):</span><br><span class="line">  dataset = <span class="keyword">tf</span>.data.TFRecordDataset(filenames)</span><br><span class="line">  dataset = dataset.<span class="keyword">map</span>(parse_exmp, num_parallel_calls=<span class="number">100</span>)</span><br><span class="line">  # Shuffle, <span class="built_in">repeat</span>, <span class="built_in">and</span> batch the examples.</span><br><span class="line">  <span class="keyword">if</span> shuffle_buffer_size &gt; <span class="number">0</span>:</span><br><span class="line">    dataset = dataset.shuffle(shuffle_buffer_size)</span><br><span class="line">  dataset = dataset.<span class="built_in">repeat</span>().batch(batch_size)</span><br><span class="line">  <span class="keyword">return</span> dataset</span><br></pre></td></tr></table></figure></p>
+<p>这里我们再说说如何把原始数据转换为tfrecord文件格式，请参考下面的代码片段：<br><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># 建立tfrecorder writer</span><br><span class="line">writer = <span class="keyword">tf</span>.python_io.TFRecordWriter(<span class="string">'csv_train.tfrecords'</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i in xrange(train_values.shape[<span class="number">0</span>]):</span><br><span class="line">    image_raw = train_values[i].tostring()</span><br><span class="line"></span><br><span class="line">    # build example protobuf</span><br><span class="line">    example = <span class="keyword">tf</span>.train.Example(</span><br><span class="line">      features=<span class="keyword">tf</span>.train.Features(feature=&#123;</span><br><span class="line">        <span class="string">'image_raw'</span>:  <span class="keyword">tf</span>.train.Feature(bytes_list=<span class="keyword">tf</span>.train.BytesList(value=[image_raw])),</span><br><span class="line">        <span class="string">'label'</span>: <span class="keyword">tf</span>.train.Feature(int64_list=<span class="keyword">tf</span>.train.Int64List(value=[train_labels[i]]))</span><br><span class="line">    &#125;))</span><br><span class="line">    writer.<span class="keyword">write</span>(record=example.SerializeToString())</span><br><span class="line"></span><br><span class="line">writer.<span class="keyword">close</span>()</span><br></pre></td></tr></table></figure></p>
+<p>然而，大规模的训练数据用这种方式转换格式会比较低效，更好的实践是用hadoop或者spark这种分布式计算平台，并行实现数据转换任务。这里给出一个用Hadoop MapReduce编程模式转换为tfrecord文件格式的开源实现：<a href="https://github.com/tensorflow/ecosystem/tree/master/hadoop" target="_blank" rel="noopener">Hadoop MapReduce InputFormat/OutputFormat for TFRecords</a>。由于该实现指定了protobuf的版本，因而可能会跟自己真正使用的hadoop平台自己的protobuf版本不一致，hadoop在默认情况下总是优先使用HADOOP_HOME/lib下的jar包，从而导致运行时错误，遇到这种情况时，只需要设置<code>mapreduce.task.classpath.user.precedence=true</code>参数，优先使用自己指定版本的jar包即可。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://zhuanlan.zhihu.com/p/30751039" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/30751039</a><br><a href="https://www.skcript.com/svr/why-every-tensorflow-developer-should-know-about-tfrecord/" target="_blank" rel="noopener">https://www.skcript.com/svr/why-every-tensorflow-developer-should-know-about-tfrecord/</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/深度学习/" rel="tag"># 深度学习</a>
+          
+            <a href="/tags/tensorflow/" rel="tag"># tensorflow</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/tensorflow-high-level-api/" rel="next" title="基于Tensorflow高阶API构建大规模分布式深度学习模型系列">
+                <i class="fa fa-chevron-left"></i> 基于Tensorflow高阶API构建大规模分布式深度学习模型系列
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/tensorflow-word-cnn/" rel="prev" title="基于Tensorflow高阶API构建大规模分布式深度学习模型系列之自定义Estimator（以文本分类CNN模型为例）">
+                基于Tensorflow高阶API构建大规模分布式深度学习模型系列之自定义Estimator（以文本分类CNN模型为例） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yangxudong</p>
+              <div class="site-description motion-element" itemprop="description">勤劳的小毛驴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">37</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://weibo.com/u/1192649764" title="微博 &rarr; http://weibo.com/u/1192649764" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.jianshu.com/users/4e1990280df6/latest_articles" title="简书 &rarr; http://www.jianshu.com/users/4e1990280df6/latest_articles" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i>简书</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://zhuanlan.zhihu.com/yangxudong" title="知乎 &rarr; https://zhuanlan.zhihu.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-medapps"></i>知乎</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://blog.csdn.net/yangxudong" title="CSDN &rarr; http://blog.csdn.net/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.cnblogs.com/yangxudong/" title="博客园 &rarr; http://www.cnblogs.com/yangxudong/" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss-square"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/yangxudong" title="GitHub &rarr; https://github.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:yangxudongsuda@gmail.com" title="E-Mail &rarr; mailto:yangxudongsuda@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope-o"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#从内存中读取数据"><span class="nav-number">1.</span> <span class="nav-text">从内存中读取数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#从文件中读取数据"><span class="nav-number">2.</span> <span class="nav-text">从文件中读取数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dataset的常用Transformation操作"><span class="nav-number">3.</span> <span class="nav-text">Dataset的常用Transformation操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#（1）map"><span class="nav-number">3.1.</span> <span class="nav-text">（1）map</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#（2）filter"><span class="nav-number">3.2.</span> <span class="nav-text">（2）filter</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#（3）shuffle"><span class="nav-number">3.3.</span> <span class="nav-text">（3）shuffle</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#（4）repeat"><span class="nav-number">3.4.</span> <span class="nav-text">（4）repeat</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#（5）batch"><span class="nav-number">3.5.</span> <span class="nav-text">（5）batch</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dataset元素变换案例"><span class="nav-number">4.</span> <span class="nav-text">Dataset元素变换案例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-解析CSV文件"><span class="nav-number">4.1.</span> <span class="nav-text">1. 解析CSV文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-解析特殊格式的文本文件"><span class="nav-number">4.2.</span> <span class="nav-text">2. 解析特殊格式的文本文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-解析TFRECORD文件"><span class="nav-number">4.3.</span> <span class="nav-text">3. 解析TFRECORD文件</span></a></li></ol></li></ol><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number"></span> <span class="nav-text">参考资料</span></a></li></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yangxudong</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    <!-- LOCAL: You can save these files to your site and update links -->
+
+  
+  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
+<!-- END LOCAL -->
+
+<script>
+  function renderGitment() {
+    var gitment = new Gitmint({
+      id: window.location.pathname,
+      owner: 'yangxudong',
+      repo: 'yangxudong.github.io',
+      
+        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+      
+      oauth: {
+      
+      
+        client_secret: '5bb7f33cc97a00106138632b133b361eca31b0fc',
+      
+        client_id: 'a6f099e5dd8b15032ace'
+      }
+    });
+    gitment.render('gitment-container');
+  }
+
+  
+    renderGitment();
+  
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

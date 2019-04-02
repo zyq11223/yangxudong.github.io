@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/my_carton.png?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="深度学习技术已经在很多领域取得了非常大的成功，然而其调参的复杂性也导致很多机器学习从业者迷失在丛林里。本文旨在总结一些训练出一个性能优秀的深度模型的相关经验，帮助自己以及这个领域的初学者少走弯路。 激活函数sigmoid/tanh. 存在饱和的问题，现在不建议使用。 ReLU. 最近几年常用的激活函数，形式为$f(x) = \max(0, x)$，目前建议首先尝试用这个激活函数。  相比于sigm">
+<meta name="keywords" content="机器学习,深度学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="拨开深度学习的迷雾：训练一个性能优秀的深度模型">
+<meta property="og:url" content="http://xudongyang.coding.me/deep-learning/index.html">
+<meta property="og:site_name" content="小毛驴">
+<meta property="og:description" content="深度学习技术已经在很多领域取得了非常大的成功，然而其调参的复杂性也导致很多机器学习从业者迷失在丛林里。本文旨在总结一些训练出一个性能优秀的深度模型的相关经验，帮助自己以及这个领域的初学者少走弯路。 激活函数sigmoid/tanh. 存在饱和的问题，现在不建议使用。 ReLU. 最近几年常用的激活函数，形式为$f(x) = \max(0, x)$，目前建议首先尝试用这个激活函数。  相比于sigm">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://cs231n.github.io/assets/nn1/layer_sizes.jpeg">
+<meta property="og:image" content="http://cs231n.github.io/assets/nn1/reg_strengths.jpeg">
+<meta property="og:image" content="http://cs231n.github.io/assets/nn2/prepro1.jpeg">
+<meta property="og:image" content="http://cs231n.github.io/assets/nn3/learningrates.jpeg">
+<meta property="og:image" content="http://cs231n.github.io/assets/nn3/accuracies.jpeg">
+<meta property="og:image" content="http://cs231n.github.io/assets/nn3/gridsearchbad.jpeg">
+<meta property="og:updated_time" content="2019-04-02T02:43:36.814Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="拨开深度学习的迷雾：训练一个性能优秀的深度模型">
+<meta name="twitter:description" content="深度学习技术已经在很多领域取得了非常大的成功，然而其调参的复杂性也导致很多机器学习从业者迷失在丛林里。本文旨在总结一些训练出一个性能优秀的深度模型的相关经验，帮助自己以及这个领域的初学者少走弯路。 激活函数sigmoid/tanh. 存在饱和的问题，现在不建议使用。 ReLU. 最近几年常用的激活函数，形式为$f(x) = \max(0, x)$，目前建议首先尝试用这个激活函数。  相比于sigm">
+<meta name="twitter:image" content="http://cs231n.github.io/assets/nn1/layer_sizes.jpeg">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小毛驴" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="http://xudongyang.coding.me/deep-learning/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>拨开深度学习的迷雾：训练一个性能优秀的深度模型 | 小毛驴</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c57513996270ce211928f7fe0c7a5483";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小毛驴</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Adventure may hurt you, but monotony will kill you.</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-essays">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/essays" rel="section"><i class="menu-item-icon fa fa-fw fa-newspaper-o"></i> <br>essays</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/deep-learning/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">拨开深度学习的迷雾：训练一个性能优秀的深度模型
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2017-03-30 11:03:40" itemprop="dateCreated datePublished" datetime="2017-03-30T11:03:40+08:00">2017-03-30</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/" itemprop="url" rel="index"><span itemprop="name">机器学习</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/深度学习/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/deep-learning/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/deep-learning/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>深度学习技术已经在很多领域取得了非常大的成功，然而其调参的复杂性也导致很多机器学习从业者迷失在丛林里。本文旨在总结一些训练出一个性能优秀的深度模型的相关经验，帮助自己以及这个领域的初学者少走弯路。</p>
+<h3 id="激活函数"><a href="#激活函数" class="headerlink" title="激活函数"></a>激活函数</h3><p>sigmoid/tanh. 存在饱和的问题，现在不建议使用。</p>
+<p>ReLU. 最近几年常用的激活函数，形式为$f(x) = \max(0, x)$，目前建议首先尝试用这个激活函数。</p>
+<ul>
+<li>相比于sigmoid/tanh函数而言，ReLU能极大地加快SGD算法的收敛速度，因为其分段线性的形式不会导致饱和；</li>
+<li>相比于sigmoid/tanh函数而言，ReLU实现简单不需要昂贵的指数运算</li>
+<li>然而，训练过程中ReLU单元可能会失效。例如，当一个非常大的梯度流经ReLU单元时，导致该单元对应的权重更新后（变得非常小）再也无法在任何数据点上激活。因此，需要小心设置学习率，较小的学习率可以缓解该问题。（太大的学习率可能会导致40%以上的ReLU单元变成dead的不可逆状态）<a id="more"></a>
+Leaky ReLU. 函数形式为：$f(x) = \mathbb{1}(x &lt; 0) (\alpha x) + \mathbb{1}(x&gt;=0) (x)$，其中$\alpha$是一个小的常数。Leaky ReLU是为了修复ReLU的dying问题，然后实际使用的结果并不一致。</li>
+</ul>
+<p>Maxout. 可以看作是ReLU的泛化。形式如： $\max(w_1^Tx+b_1, w_2^Tx + b_2)$</p>
+<h3 id="如何决定网络结构（层数和每层的节点数）"><a href="#如何决定网络结构（层数和每层的节点数）" class="headerlink" title="如何决定网络结构（层数和每层的节点数）"></a>如何决定网络结构（层数和每层的节点数）</h3><p>增加神经网络的层数或者节点数，模型的容量（能够表示的函数空间）会增大。下图是在一个二分类问题上不同隐层节点数的3个单隐层神经网络模型的训练结果。<br><img src="http://cs231n.github.io/assets/nn1/layer_sizes.jpeg" alt></p>
+<p>可以看出，节点数越多越能够表示复杂的函数，然而也越容易过拟合，因为高容量的模型容易捕获到训练数据噪音。如上图所示，只有隐层只有3个节点的模型的分类决策面是比较光滑的，它把那些错误分类的点认为是数据中的异常点/噪音（outlier）。实际中，这样的模型泛化性能可能更好。</p>
+<p>那么是否意味着我们应该偏好小的模型呢？答案是否定的，因为我们有其他更好的方法来防止模型过拟合，比如说正则化、dropout、噪音注入等。实际中，更常用这些方法来对抗过拟合问题，而不是简单粗暴地减少节点数量。</p>
+<p>这其中微妙的原因在于，小的神经网络用梯度下降算法更难训练。小的神经网络有更少的局部极小值，然而其中许多极小值点对应的泛化性能较差且易于被训练算法到达。相反，大的神经网络包含更多的局部极小值点，但这些点的实际损失是比较小的。更多内容请参考这篇论文《<a href="http://arxiv.org/abs/1412.0233" target="_blank" rel="noopener">The Loss Surfaces of Multilayer Networks</a>》。实际中，小的网络模型的预测结果方差比较大；大的网络模型方差较小。</p>
+<p>重申一下，正则化是更加好的防止过拟合的方法，下图是有20个节点的单隐层网络在不同正则化强度下的结果。<br><img src="http://cs231n.github.io/assets/nn1/reg_strengths.jpeg" alt><br>可见，合适的正则化强度可以使得一个较大的模型的决策分类面比较光滑。然而，千万要注意的是不能让正则项的值淹没了原始数据损失，那样的话梯度就主要有正则项来决定了。</p>
+<p>因此，在计算能力预算充足的情况下，应该偏好使用大的网络模型，同时使用一些防止过拟合的技术。</p>
+<h3 id="数据预处理"><a href="#数据预处理" class="headerlink" title="数据预处理"></a>数据预处理</h3><p>假设有数据集为一个N * D的矩阵X，N是数据记录数，D是每条数据的维数。</p>
+<ul>
+<li><p>减去均值。在每个特征上都把原始数据减去该维特征的均值是一种常用的预处理手段，处理之后的数据是以原点为中心的。<code>X -= np.mean(X, axis = 0)</code></p>
+</li>
+<li><p>归一化。使得不同维度的数据有相同的scale。主要有两种归一化方法，一种是各个维度上首先减去均值后再除以标准差：<code>X /= np.std(X, axis = 0</code>；另一种是最小最大标准化，这种方法归一化之后的范围在[-1,1]，只有在不同维度特征数据有不同的单位或者scale时，采用这种方法才是有意义的。</p>
+</li>
+</ul>
+<p><img src="http://cs231n.github.io/assets/nn2/prepro1.jpeg" alt></p>
+<ul>
+<li>降维。如PCA方法、Whitening方法。这是一个可选的步骤。</li>
+</ul>
+<p>注意数据预处理的陷阱。所有预处理阶段需要用到的统计数据，比如均值、标准差等，只能在训练集上计算，然后应用到包括测试集和验证集的数据上。例如，在整个数据集上计算均值，然后每条数据减去均值做数据原点中心化，最后再把数据集分裂为训练集、验证集和测试集的流程是错误的。这种类型的错误有时候被叫做<strong>数据穿透</strong>，即训练集中包含了本不该包含的数据或数据的统计特征，是机器学习从业者常犯的一种数据。比如，在做商品点击率预估时，假设我们用不包括昨天在内的前7天的日志数据作为特征提取的数据集，昨天的日志数据作为数据样本的label生成数据集，那么需要格外小心计算特征（比如，用户的偏好类目）时，千万不要把昨天的数据也统计进去。</p>
+<h3 id="权重初始化"><a href="#权重初始化" class="headerlink" title="权重初始化"></a>权重初始化</h3><p>神经网络权重初始化的基本原则是要打破网络结构的对称性（symmetry breaking）。比如，权重全部初始化为0是错误的，这样的话所有节点计算到的梯度值都是一样的，权重更新也是一致的，最终的结果就是所有权重拥有相同的值。</p>
+<ul>
+<li>随机初始化为小的数值。当然也不能太小，否则计算出的梯度就会很小。<code>W = 0.01* np.random.randn(D,H)</code></li>
+<li>用n的平方根校正方差。<code>w = np.random.randn(n) / sqrt(n)</code>，其中<code>n</code>是输入的数量。这也意味着，权重需要逐层初始化，因为每层的节点对应的输入通常是不同的。如果节点的激活函数为ReLU，那么用<code>sqrt(2.0/n)</code>来校正方差更好：<code>w = np.random.randn(n) * sqrt(2.0/n)</code>。</li>
+<li>稀疏初始化。首先把所有的权重初始化为0，然后为每个节点随机选择固定数量（比如10）的链接赋予小的高斯权重。该方法也可以打破网络结构的对称性。</li>
+<li><a href="http://arxiv.org/abs/1502.03167" target="_blank" rel="noopener">Batch Normalization</a>。</li>
+</ul>
+<p>偏置（biases)通常初始化为0。</p>
+<h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><p>多分类问题的常见损失函数为：</p>
+<ul>
+<li>SVM loss：$L_i = \sum_{j\neq y_i} \max(0, f_j - f_{y_i} + 1)$</li>
+<li>Cross-entropy loss: $L_i = -\log\left(\frac{e^{f_{y_i}}}{ \sum_j e^{f_j} }\right)$。对应非常多类别的分类任务，交叉熵损失的计算代价是非常大的，缓解这一问题的常用方法包括Hierarchical Softmax和negative sampling。</li>
+</ul>
+<p>属性分类问题(Attribute classification，即每个样本的label不止一个)的常用损失函数为：</p>
+<script type="math/tex; mode=display">L_i = \sum_j \max(0, 1 - y_{ij} f_j)</script><p>上式中的加和是在所有类别$j$上进行的，当第i个样本有第j个类别标签时$y_{ij}$的值为1，否则为-1；当第j个类别被预测时，$f_j$的值为正，否则为负。<br>另一种常见的方法，是为每一个类别训练一个二分类模型，这时采用的损失为逻辑回归损失函数：<script type="math/tex">L_i = \sum_j y_{ij} \log(\sigma(f_j)) + (1 - y_{ij}) \log(1 - \sigma(f_j))</script>，其中$y_{ij}$在模型预测为正例时值为1，预测为负例时值为0。</p>
+<p>回归问题的损失函数：</p>
+<ul>
+<li>L2 loss: $L_i = \Vert f - y_i \Vert_2^2$</li>
+<li>L1 loss: $L_i = \Vert f - y_i \Vert_1 = \sum_j \mid f_j - (y_i)_j \mid$</li>
+</ul>
+<p>L2损失通常比较难优化，相对于比较稳定的Softmax损失而言，因为它需要网络输出尽可能精确逼近一个值；而对于Softmax而言，每个节点输出的具体值并不是那么重要，softmax只关心它们的（相对）大小是否恰当。并且，L2损失易受异常点的影响，鲁棒性不够。</p>
+<p>因此，当遇到一个回归问题时，首先考虑能否转化为分类问题，即可否把要回归的值划分到固定大小的桶。比如，一个评分预测任务，与其训练一个回归模型，不如训练5个独立的分类模型，用来预测用户是否给评分1~5。</p>
+<blockquote>
+<p>When faced with a regression task, first consider if it is absolutely necessary. Instead, have a strong preference to discretizing your outputs to bins and perform classification over them whenever possible.</p>
+</blockquote>
+<h3 id="检查梯度"><a href="#检查梯度" class="headerlink" title="检查梯度"></a>检查梯度</h3><p>如果自己实现模型，需要做梯度的解析解和数值解的对比验证。数值解用下面的公式计算：<script type="math/tex">\frac{df(x)}{dx} = \frac{f(x + h) - f(x - h)}{2h} \hspace{0.1in}</script><br>其中，$h$的推荐值为1e-4 ~ 1e-6。<br>在比较两者的差异时，使用相对误差，而不是绝对误差：<script type="math/tex">\frac{\mid f'_a - f'_n \mid}{\max(\mid f'_a \mid, \mid f'_n \mid)}</script></p>
+<ul>
+<li>relative error &gt; 1e-2 usually means the gradient is probably wrong</li>
+<li>1e-2 &gt; relative error &gt; 1e-4 should make you feel uncomfortable</li>
+<li>1e-4 &gt; relative error is usually okay for objectives with kinks. But if there are no kinks (e.g. use of tanh nonlinearities and softmax), then 1e-4 is too high.</li>
+<li>1e-7 and less you should be happy.</li>
+</ul>
+<p>网络越深，两者的相对误差越大。另外，为了防止数值问题，在计算过程中使用double类型而不是float类型。还需要额外注意不可导的点，比如ReLU在原点出不可导。需要在尽可能多的节点比较两者，而不只是一小部分。可以只在一部分维度上做检查。做梯度检查时，需要关闭正则项、dropout等。</p>
+<h3 id="训练前的检查"><a href="#训练前的检查" class="headerlink" title="训练前的检查"></a>训练前的检查</h3><ul>
+<li>初始化权重之后，检查损失是否符合预期。比如，10个类别的分类问题，采用交叉熵损失函数，那么期望的初始数据损失（不包括正则项）为2.302左右，因为我们预计初始时每个类别被预测的概率都是0.1，因此交叉熵损失就是正确类别的负对数概率：-ln(0.1)=2.302。对于The Weston Watkins SVM损失，初始时假设有9个类别都违反了最小间隔是合理的，因此期望损失为9（因为每一个错误的列表的最小间隔为1）。</li>
+<li>增加正则项强度，应该要能对应地增加损失。</li>
+<li>用一小部分数据训练模型，直到模型过拟合，最终的损失为0（正则项强度设为0）。如果这项检查没有通过，就不该开始训练模型。</li>
+</ul>
+<h3 id="监控训练过程"><a href="#监控训练过程" class="headerlink" title="监控训练过程"></a>监控训练过程</h3><ul>
+<li><p>跟踪损失的变化情况（evaluated on the individual batches during the forward pass），验证学习率是否设置合理。<br><img src="http://cs231n.github.io/assets/nn3/learningrates.jpeg" alt="loss"></p>
+</li>
+<li><p>跟踪正确率的变化（在训练集和验证集上分别跟踪），判断模型是否过拟合，以及模型该在什么时候停止训练。<br><img src="http://cs231n.github.io/assets/nn3/accuracies.jpeg" alt="accuracy"><br>如果发生过拟合，则应加强正则化的强度，比如增加L2正则项的系数$\lambda$，或者增加dropout的概率等。当然，如果验证集的正确率和训练集的正确率一直吻合得很好也是有问题的，这意味着模型的容量可能不够，应该尝试增加更多的节点（参数）。</p>
+</li>
+<li><p>跟踪权重更新情况，计算并记录每组参数更新的比率：$\frac{\Delta w}{w}$，这个比率应该在1e-3左右，如果比这个值小意味着学习率可能过小，反之，则应怀疑学习率是否过大。</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># assume parameter vector W and its gradient vector dW</span></span><br><span class="line">param_scale = np.linalg.norm(W.ravel())</span><br><span class="line">update = -learning_rate<span class="number">*d</span>W #<span class="built_in"> simple </span>SGD update</span><br><span class="line">update_scale = np.linalg.norm(update.ravel())</span><br><span class="line">W += update # the actual update</span><br><span class="line"><span class="builtin-name">print</span> update_scale / param_scale # want ~1e-3</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>跟踪每层的激活函数值分布或梯度分布，验证初始化是否正确。比如使用tanh激活函数的层，如果看到激活函数的值大量集中在0、1或者-1，则表示不正常。</p>
+</li>
+<li><p>如果是在处理图像任务，则可以尝试可视化第一层的权重，查看模拟的图片是否光滑、干净。</p>
+</li>
+</ul>
+<h3 id="参数更新"><a href="#参数更新" class="headerlink" title="参数更新"></a>参数更新</h3><p>神经网络模型的参数更新有多种方式，具体可以查看这篇文章：<a href="/gradient-descent-variants/" title="深度学习中的常用训练算法">深度学习中的常用训练算法</a>。</p>
+<p>SGD+Nesterov Momentum 或者 Adam 是两种推荐的参数更新方法。</p>
+<h3 id="超参数优化"><a href="#超参数优化" class="headerlink" title="超参数优化"></a>超参数优化</h3><p>神经网络模型的主要超参数包括：</p>
+<ul>
+<li>初始学习率</li>
+<li>学习率衰减调度方法</li>
+<li>正则化的强度</li>
+</ul>
+<p>由于神经网络模型通常比较大，因此交叉验证的代价很高，通常用一折验证来代替交叉验证。</p>
+<p>在log scale上搜索超参数是推荐的做法，比如学习率的搜索范围可以设为<code>learning_rate = 10 ** uniform(-6, 1)</code>，正则化强度也可以采用类似的方法。这是因为学习率和正则化强度都是以乘积的形式影响代价函数的。如果学习率为0.001，那么加上0.01就会产生巨大的影响；但如果学习率为10，那么加上0.01则几乎观察不到任何影响，因此考虑学习率的范围时乘以或除以一个数，要不加上或者减去一个数更好。在另外一些参数上，则还是保留原来的量级较好，比如dropout概率：<code>dropout = uniform(0,1)</code>。</p>
+<p>需要注意搜索范围的边界，如果效果在边界处最好，则可能需要修改搜索范围并重新搜索。</p>
+<p>与Grid search相比，random search更好，据说random search效率更高。深度学习中经常发生的情况是，其中一些超参数要比另一些更加重要，与网格搜索相比随机搜索能够精确地在重要的超参数上发现更好的值。具体查看这偏论文：《<a href="http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf" target="_blank" rel="noopener">Random Search for Hyper-Parameter Optimization</a>》<br><img src="http://cs231n.github.io/assets/nn3/gridsearchbad.jpeg" alt></p>
+<p>超参搜索需要分阶段，从粗粒度到细粒度分层进行。比如首先先搜索较粗的范围(e.g. 10 ** [-6, 1])，然后根据搜索到的最好的值，使用更窄的搜索范围。粗粒度搜索时，可以不用等待训练完全收敛，只需要观察前面几个epoch即可。</p>
+<p>贝叶斯超参数优化是一个研究如何高效地探索超参数空间的研究领域，其核心思想是在不同的超参数上验证性能时做好探索和利用的平衡（exploration - exploitation trade-off）。 Spearmint，SMAC，Hyperopt是几个有名的基于贝叶斯超参数优化方法的库。</p>
+<h3 id="模型集成"><a href="#模型集成" class="headerlink" title="模型集成"></a>模型集成</h3><p>训练几个独立的神经网络模型，用他们预测结果的平均值（或者多数表决）来确定最终的结果，是一种常用的改进性能的方法。通常集成的模型数量越多，改进的空间也越大。当然，集成彼此之间有差异化的模型更好。几种构建集成模型的常用方法如下：</p>
+<ul>
+<li>相同的模型，不同的初始化。用交叉验证的方法确定最佳超参数，然后训练多个使用最佳超参数但不同初始化的模型。这样方法，集成的模型多样性可能不够。</li>
+<li>交叉验证中发现的性能最好的多个模型。有足够的多样性，但也增加了集成进一些次优的模型的风险。</li>
+<li>保留同一个模型在训练过程中的不同副本（checkpoint）。因为深度学习的训练通常都是昂贵的，这种方法不需要训练多个模型，是非常经济的。但也有缺乏多样性的风险。</li>
+<li>在训练过程中平均模型的参数得到一个新的模型。在训练过程中维护一个额外的网络，它的参数取值与正式模型权重的指数衰减和（an exponentially decaying sum of previous weights during training）。相对于是维护了最近几次迭代生成的模型的移动平均，这种平滑的方法相对于是前一种方法的一种特殊实现，在实际中可以获得一到两个百分点的性能提升。对这种方法一个比较粗略的认识是，代价函数的误差超平面是一个碗状的结构，模型尝试到达碗底的位置，因此平均之后的模型更容易到家接近碗底的位置。</li>
+</ul>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://www.youtube.com/watch?v=EK61htlw8hY" target="_blank" rel="noopener">Dark Knowledge</a> from Geoff Hinton<br><a href="http://arxiv.org/pdf/1206.5533v2.pdf" target="_blank" rel="noopener">Practical Recommendations for Gradient-Based Training of Deep Architectures</a> from Yoshua Bengio<br><a href="http://cs231n.github.io/" target="_blank" rel="noopener">CS231n: Convolutional Neural Networks for Visual Recognition </a> from Andrew Ng</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/机器学习/" rel="tag"># 机器学习</a>
+          
+            <a href="/tags/深度学习/" rel="tag"># 深度学习</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/gradient-descent-variants/" rel="next" title="深度学习中的常用训练算法">
+                <i class="fa fa-chevron-left"></i> 深度学习中的常用训练算法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/sponsored-search/" rel="prev" title="搜索广告(sponsored-search)概述">
+                搜索广告(sponsored-search)概述 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yangxudong</p>
+              <div class="site-description motion-element" itemprop="description">勤劳的小毛驴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">37</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">46</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://weibo.com/u/1192649764" title="微博 &rarr; http://weibo.com/u/1192649764" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.jianshu.com/users/4e1990280df6/latest_articles" title="简书 &rarr; http://www.jianshu.com/users/4e1990280df6/latest_articles" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i>简书</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://zhuanlan.zhihu.com/yangxudong" title="知乎 &rarr; https://zhuanlan.zhihu.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-medapps"></i>知乎</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://blog.csdn.net/yangxudong" title="CSDN &rarr; http://blog.csdn.net/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.cnblogs.com/yangxudong/" title="博客园 &rarr; http://www.cnblogs.com/yangxudong/" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss-square"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/yangxudong" title="GitHub &rarr; https://github.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:yangxudongsuda@gmail.com" title="E-Mail &rarr; mailto:yangxudongsuda@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope-o"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#激活函数"><span class="nav-number">1.</span> <span class="nav-text">激活函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何决定网络结构（层数和每层的节点数）"><span class="nav-number">2.</span> <span class="nav-text">如何决定网络结构（层数和每层的节点数）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据预处理"><span class="nav-number">3.</span> <span class="nav-text">数据预处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#权重初始化"><span class="nav-number">4.</span> <span class="nav-text">权重初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#损失函数"><span class="nav-number">5.</span> <span class="nav-text">损失函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#检查梯度"><span class="nav-number">6.</span> <span class="nav-text">检查梯度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#训练前的检查"><span class="nav-number">7.</span> <span class="nav-text">训练前的检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#监控训练过程"><span class="nav-number">8.</span> <span class="nav-text">监控训练过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参数更新"><span class="nav-number">9.</span> <span class="nav-text">参数更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#超参数优化"><span class="nav-number">10.</span> <span class="nav-text">超参数优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#模型集成"><span class="nav-number">11.</span> <span class="nav-text">模型集成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">12.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yangxudong</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    <!-- LOCAL: You can save these files to your site and update links -->
+
+  
+  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
+<!-- END LOCAL -->
+
+<script>
+  function renderGitment() {
+    var gitment = new Gitmint({
+      id: window.location.pathname,
+      owner: 'yangxudong',
+      repo: 'yangxudong.github.io',
+      
+        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+      
+      oauth: {
+      
+      
+        client_secret: '5bb7f33cc97a00106138632b133b361eca31b0fc',
+      
+        client_id: 'a6f099e5dd8b15032ace'
+      }
+    });
+    gitment.render('gitment-container');
+  }
+
+  
+    renderGitment();
+  
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
