@@ -115,7 +115,7 @@
 <meta property="og:image" content="https://private-alipayobjects.alipay.com/alipay-rmsdeploy-image/skylark/png/1869bb5b-29ce-4ca8-9461-e23ad3a7bb45.png">
 <meta property="og:image" content="https://private-alipayobjects.alipay.com/alipay-rmsdeploy-image/skylark/png/5f715f8d-9eed-481f-a969-13c78d50529c.png">
 <meta property="og:image" content="https://hopshadoop47880376.files.wordpress.com/2018/10/null9.png">
-<meta property="og:updated_time" content="2019-04-22T03:20:50.426Z">
+<meta property="og:updated_time" content="2019-04-22T05:55:18.970Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一文说清楚Tensorflow分布式训练必备知识">
 <meta name="twitter:description" content="Methods that scale with computation are the future of AI.—Rich Sutton, 强化学习之父  大数据时代的互联网应用产生了大量的数据，这些数据就好比是石油，里面蕴含了大量知识等待被挖掘。深度学习就是挖掘数据中隐藏知识的利器，在许多领域都取得了非常成功的应用。然而，大量的数据使得模型的训练变得复杂，使用多台设备分布式训练成了必备的选择">
@@ -446,7 +446,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2019-04-22 11:20:50" itemprop="dateModified" datetime="2019-04-22T11:20:50+08:00">2019-04-22</time>
+                <time title="Modified: 2019-04-22 13:55:18" itemprop="dateModified" datetime="2019-04-22T13:55:18+08:00">2019-04-22</time>
               
             
           </span>
@@ -522,7 +522,7 @@
 <p>Methods that scale with computation are the future of AI.<br>—Rich Sutton, 强化学习之父</p>
 </blockquote>
 <p>大数据时代的互联网应用产生了大量的数据，这些数据就好比是石油，里面蕴含了大量知识等待被挖掘。深度学习就是挖掘数据中隐藏知识的利器，在许多领域都取得了非常成功的应用。然而，大量的数据使得模型的训练变得复杂，使用多台设备分布式训练成了必备的选择。</p>
-<p>Tensorflow是目前比较流行的深度学习框架，本文着重介绍tensorflow框架是如何支持分布式训练的。</p>
+<p>Tensorflow是目前比较流行的深度学习框架，本文着重介绍tensorflow框架是如何支持分布式训练的。<br><a id="more"></a> </p>
 <h2 id="分布式训练策略"><a href="#分布式训练策略" class="headerlink" title="分布式训练策略"></a>分布式训练策略</h2><h3 id="模型并行"><a href="#模型并行" class="headerlink" title="模型并行"></a>模型并行</h3><p>所谓模型并行指的是将模型部署到很多设备上（设备可能分布在不同机器上，下同）运行，比如多个机器的GPUs。当神经网络模型很大时，由于显存限制，它是难以完整地跑在单个GPU上，这个时候就需要把模型分割成更小的部分，不同部分跑在不同的设备上，例如将网络不同的层运行在不同的设备上。</p>
 <p>由于模型分割开的各个部分之间有相互依赖关系，因此计算效率不高。所以在模型大小不算太大的情况下一般不使用模型并行。</p>
 <p>在tensorflow的术语中，模型并行称之为”in-graph replication”。</p>

@@ -108,7 +108,7 @@
 <meta property="og:image" content="http://xudongyang.coding.me/rank-distance/tau_weight.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/rank-distance/footrule.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/rank-distance/footrule_weight.jpg">
-<meta property="og:updated_time" content="2019-04-22T03:15:44.964Z">
+<meta property="og:updated_time" content="2019-04-22T03:35:35.244Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="如何度量两个排序列表的相似性？">
 <meta name="twitter:description" content="在某些情况下，我们需要度量两个排序列表的距离，或者说相似程度。比如，在信息检索领域，我们可能需要计算在某个查询条件下系统给出的文档的排序列表与一个预先定义好的“完美”排序列表的接近程度。或者我们可能需要比较不同搜索引擎的结果。又或者，在推荐系统中，我们需要监控某次算法迭代（A/B测试）中，新算法针对某个用户给出的推荐列表与旧算法给出的推荐列表的差异程度，以便决定是否要触发自动报警。 在信息检索领域">
@@ -422,7 +422,7 @@
                 
               
 
-              <time title="Created: 2019-04-22 10:35:38 / Modified: 11:15:44" itemprop="dateCreated datePublished" datetime="2019-04-22T10:35:38+08:00">2019-04-22</time>
+              <time title="Created: 2019-04-22 10:35:38 / Modified: 11:35:35" itemprop="dateCreated datePublished" datetime="2019-04-22T10:35:38+08:00">2019-04-22</time>
             
 
             
@@ -610,6 +610,7 @@
 <p>根据定义，$A_d$是小于1的，则有$0 \leq SIM \leq \sum_d w_d &lt; 1$。</p>
 <p>至此，RBO距离度量方法可以定义为：</p>
 <script type="math/tex; mode=display">RBO(S,T,p)=(1-p)\sum_{d=1}^{\infty}p^{d-1} \cdot A_d</script><p>其中$p$是一个可以预先定下来的参数。可以看到RBO指标是有界的，值在0~1的范围之间，并且RBO指标还带有top-weighteness属性。</p>
+<p>RBO指标有很好的性质，非常适合用来度量两个排序列表的相似度，强烈推荐！</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
 <li><a href="https://ragrawal.wordpress.com/2013/01/18/comparing-ranked-list/" target="_blank" rel="noopener">Comparing Ranked List</a></li>
 <li><a href="http://codalism.com/research/papers/wmz10_tois.pdf" target="_blank" rel="noopener">A Similarity Measure for Indefinite Rankings</a></li>
