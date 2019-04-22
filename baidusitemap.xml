@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://xudongyang.coding.me/xdeepfm/</loc>
-    <lastmod>2019-04-02</lastmod>
+    <loc>http://xudongyang.coding.me/distributed-tensorflow/</loc>
+    <lastmod>2019-04-22</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/utf8/</loc>
+    <loc>http://xudongyang.coding.me/rank-distance/</loc>
+    <lastmod>2019-04-22</lastmod>
+  </url>  <url>
+    <loc>http://xudongyang.coding.me/xdeepfm/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/trie/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/tree-ensemble-importance/</loc>
+    <lastmod>2019-04-02</lastmod>
+  </url>  <url>
+    <loc>http://xudongyang.coding.me/utf8/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/traffic-control/</loc>
@@ -67,34 +73,34 @@
     <loc>http://xudongyang.coding.me/jvm-class-loader/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/item-pop-score/</loc>
-    <lastmod>2019-04-02</lastmod>
-  </url>  <url>
     <loc>http://xudongyang.coding.me/hign-eq-is-talking2/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/gradient-descent/</loc>
+    <loc>http://xudongyang.coding.me/item-pop-score/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/hign-eq-is-talking/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/gradient-descent-variants/</loc>
+    <loc>http://xudongyang.coding.me/gradient-descent/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/gbdt/</loc>
+    <loc>http://xudongyang.coding.me/gradient-descent-variants/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/good-feature/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
+    <loc>http://xudongyang.coding.me/gbdt/</loc>
+    <lastmod>2019-04-02</lastmod>
+  </url>  <url>
     <loc>http://xudongyang.coding.me/esmm/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/esmm-1/</loc>
+    <loc>http://xudongyang.coding.me/deep-learning/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/deep-learning/</loc>
+    <loc>http://xudongyang.coding.me/esmm-1/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/deep-learning-in-search/</loc>
