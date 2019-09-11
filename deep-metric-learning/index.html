@@ -107,12 +107,12 @@
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/contrastive-loss.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/triplet-loss.jpg">
 <meta property="og:image" content="http://lijiancheng0614.github.io/2016/03/17/2016_03_17_Deep_Metric_Learning/fig4.png">
-<meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/triplet-loss.jpg">
+<meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/lifted-structure.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/rll-loss.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/loss-list.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/similarity.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/ms-loss.jpg">
-<meta property="og:updated_time" content="2019-09-11T14:15:38.519Z">
+<meta property="og:updated_time" content="2019-09-11T15:10:03.621Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深度度量学习中的损失函数">
 <meta name="twitter:description" content="度量学习（metric learning）研究如何在一个特定的任务上学习一个距离函数，使得该距离函数能够帮助基于近邻的算法（kNN、k-means等）取得较好的性能。深度度量学习（deep metric learning）是度量学习的一种方法，它的目标是学习一个从原始特征到低维稠密的向量空间（称之为嵌入空间，embedding space）的映射，使得同类对象在嵌入空间上使用常用的距离函数（欧氏距">
@@ -426,7 +426,7 @@
                 
               
 
-              <time title="Created: 2019-09-11 17:18:55 / Modified: 22:15:38" itemprop="dateCreated datePublished" datetime="2019-09-11T17:18:55+08:00">2019-09-11</time>
+              <time title="Created: 2019-09-11 17:18:55 / Modified: 23:10:03" itemprop="dateCreated datePublished" datetime="2019-09-11T17:18:55+08:00">2019-09-11</time>
             
 
             
@@ -538,7 +538,7 @@ L_{i, j} &= \max ( \max_{(i, k) \in \hat{N}} \alpha - D_{i, k}, \max_{(j, l) \in
 <script type="math/tex; mode=display">\begin{align}
 \tilde{L}_{i, j} &= \log ( \sum_{(i, k) \in N} \exp \{\alpha - D_{i, k}\} + \sum_{(j, l) \in N} \exp \{\alpha - D_{j, l}\} ) + D_{i, j} \\
 \tilde{L} &= \frac{1}{2 \lvert P \rvert} \sum_{(i, j) \in P} \max (0, \tilde{L}_{i, j})^2
-\end{align}</script><p><img src="/deep-metric-learning/triplet-loss.jpg" alt="triplet loss"></p>
+\end{align}</script><p><img src="/deep-metric-learning/lifted-structure.jpg" alt="triplet loss"></p>
 <h3 id="5-Proxy-NCA-loss"><a href="#5-Proxy-NCA-loss" class="headerlink" title="5. Proxy NCA loss"></a>5. Proxy NCA loss</h3><p>这个方法提出的目的是去解决采样的问题。假设W代表着训练集中的一小部分数据，在采样时通过选择与W中距离最近的一个样本u作为代理(proxy), 即：<script type="math/tex">p(u)=argmin_{w \in W}d(u,w)</script></p>
 <p>基于选择的proxy, NCA损失为：</p>
 <script type="math/tex; mode=display">L(a,u,)=-log\left( \frac{exp(-d(a,p(u)))}{\sum_{z \in Z}exp(-d(a,p(z)))}  \right)</script><h3 id="6-Ranked-list-loss"><a href="#6-Ranked-list-loss" class="headerlink" title="6. Ranked list loss"></a>6. Ranked list loss</h3><p>上述的损失函数都存在如下的两点局限性：</p>

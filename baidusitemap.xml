@@ -31,10 +31,10 @@
     <loc>http://xudongyang.coding.me/tensorflow-high-level-api/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/tensorflow-feature-columns/</loc>
+    <loc>http://xudongyang.coding.me/tensorflow-dataset/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/tensorflow-dataset/</loc>
+    <loc>http://xudongyang.coding.me/tensorflow-feature-columns/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/sponsored-search/</loc>
@@ -46,10 +46,10 @@
     <loc>http://xudongyang.coding.me/simrank-plus-plus/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/simrank-evidence/</loc>
+    <loc>http://xudongyang.coding.me/simrank-iteration/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/simrank-iteration/</loc>
+    <loc>http://xudongyang.coding.me/simrank-evidence/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/search-relevance2/</loc>
@@ -64,10 +64,10 @@
     <loc>http://xudongyang.coding.me/regularization-in-deep-learning/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/math-in-hexo/</loc>
+    <loc>http://xudongyang.coding.me/machine-learning/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/machine-learning/</loc>
+    <loc>http://xudongyang.coding.me/math-in-hexo/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/linucb/</loc>
@@ -76,16 +76,16 @@
     <loc>http://xudongyang.coding.me/jvm-class-loader/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/item-pop-score/</loc>
-    <lastmod>2019-04-02</lastmod>
-  </url>  <url>
     <loc>http://xudongyang.coding.me/hign-eq-is-talking2/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/gradient-descent/</loc>
+    <loc>http://xudongyang.coding.me/item-pop-score/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/hign-eq-is-talking/</loc>
+    <lastmod>2019-04-02</lastmod>
+  </url>  <url>
+    <loc>http://xudongyang.coding.me/gradient-descent/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/gradient-descent-variants/</loc>
@@ -100,10 +100,10 @@
     <loc>http://xudongyang.coding.me/esmm/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/esmm-1/</loc>
+    <loc>http://xudongyang.coding.me/deep-learning/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/deep-learning/</loc>
+    <loc>http://xudongyang.coding.me/esmm-1/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/deep-learning-in-search/</loc>
