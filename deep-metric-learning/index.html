@@ -112,7 +112,7 @@
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/loss-list.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/similarity.jpg">
 <meta property="og:image" content="http://xudongyang.coding.me/deep-metric-learning/ms-loss.jpg">
-<meta property="og:updated_time" content="2019-09-11T14:00:22.225Z">
+<meta property="og:updated_time" content="2019-09-11T14:15:38.519Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深度度量学习中的损失函数">
 <meta name="twitter:description" content="度量学习（metric learning）研究如何在一个特定的任务上学习一个距离函数，使得该距离函数能够帮助基于近邻的算法（kNN、k-means等）取得较好的性能。深度度量学习（deep metric learning）是度量学习的一种方法，它的目标是学习一个从原始特征到低维稠密的向量空间（称之为嵌入空间，embedding space）的映射，使得同类对象在嵌入空间上使用常用的距离函数（欧氏距">
@@ -426,7 +426,7 @@
                 
               
 
-              <time title="Created: 2019-09-11 17:18:55 / Modified: 22:00:22" itemprop="dateCreated datePublished" datetime="2019-09-11T17:18:55+08:00">2019-09-11</time>
+              <time title="Created: 2019-09-11 17:18:55 / Modified: 22:15:38" itemprop="dateCreated datePublished" datetime="2019-09-11T17:18:55+08:00">2019-09-11</time>
             
 
             
@@ -549,7 +549,7 @@ L_{i, j} &= \max ( \max_{(i, k) \in \hat{N}} \alpha - D_{i, k}, \max_{(j, l) \in
 <p>Ranked List Loss对着两个问题提出了改进。</p>
 <p>假设$X=\{(x_i, y_i)\}_{i=1}^N$表示训练集，其中每一组元素$(x_i, y_i)$表示成对的样本与其标签，总共包括$C$个类别，即，$y_i \in [i,2,\cdots,C]$, $\{x_i^c\}_{i=1}^{N_c}$表示属于类别$c$的所有样本，$N_c$表示相应类别的样本数量。</p>
 <p>我们的目标是学习到一个函数$f$使得正样本对之间的相似度高于负样本之间的相似度。为了将正负样本区分开，Ranked List Loss希望负样本之间的距离大于某个阈值$α$，并且正样本之间的距离小于$α-m$，即正负样本之间至少有$m$的间隔。基于此，提出了pairwise margin loss：</p>
-<script type="math/tex; mode=display">L_m(x_i, x_j;f)=(1-y_{ij})[α-d_{ij}]_+ + y_{ij}[d_{ij}-(α-m)]_+</script><p>其中，当$y_i=y_j$时，$y_{ij}=1$，否则$y_{ij}=0$；$d_{ij}$表示$f(x_i), f(x_j)$之间的欧式距离。</p>
+<script type="math/tex; mode=display">L_m(x_i, x_j;f)=(1-y_{ij})[α-d_{ij}]_+ + y_{ij}[d_{ij}-(α-m)]_+</script><p>其中，当$y_i=y_j$时，$y_{ij}=1$，否则$y_{ij}=0$；$d_{ij}$表示$f(x_i), f(x_j)$之间的欧式距离，$[\cdot]_+$是hinge函数。</p>
 <p>对样本进行合适采样可以加快模型的收敛速率和提高模型性能。Ranked List Loss使用的采样策略很简单，就是损失函数不为0的样本，具体来说，对于正样本，损失函数不为0意味着它们与anchor之间的距离大于$α-m$, 类似的，对于负样本，损失函数不为0意味着它们与anchor之间的距离小于$α$，相当于使得同一类别位于一个半径为$α-m$大小的超球体内。</p>
 <p><img src="/deep-metric-learning/rll-loss.jpg" alt="losses"></p>
 <p>给定一个anchor $x_i^c$, 基于相似度对其他样本进行排序，在这个排序结果中，有$N_{c}-1$ 个正样本，用$P_{c,i}=\{x_j^c|j \neq i\}$表示。同样地，有$\sum_{k \neq c}N_k$个负样本，用$N_{c,i}=\{x_j^k|k \neq c\}$表示。于每个anchor $x_i^c$, 我们希望使得它与正样本集$P_{c,i}$的距离越近越好，并且与负样本集$N_{c,i}$之间存在着$m$的间隔，同时，我们还希望使得anchor与负样本的距离大于边界$α$。在执行困难样本挖掘后，得到困难的正样本集合为 <script type="math/tex">P_{c,i}^{*}=\{x_j^c | j \neq i,d_{ij}>(\alpha-m)\}</script> ，困难的负样本集合为 <script type="math/tex">N_{c,i}^{*}=\{x_j^k | k \neq c, d_{ij}<\alpha\}</script> 。</p>
