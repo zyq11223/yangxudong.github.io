@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yangxudong.github.io/deep-metric-learning/</loc>
+    
+    <lastmod>2019-09-11T14:00:22.225Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yangxudong.github.io/distributed-tensorflow/</loc>
     
     <lastmod>2019-04-22T05:55:18.970Z</lastmod>
@@ -44,13 +51,6 @@
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/trie/</loc>
-    
-    <lastmod>2019-04-02T02:43:36.876Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yangxudong.github.io/tree-ensemble-importance/</loc>
     
     <lastmod>2019-04-02T02:43:36.876Z</lastmod>
@@ -59,6 +59,13 @@
   
   <url>
     <loc>http://yangxudong.github.io/utf8/</loc>
+    
+    <lastmod>2019-04-02T02:43:36.876Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yangxudong.github.io/trie/</loc>
     
     <lastmod>2019-04-02T02:43:36.876Z</lastmod>
     
@@ -121,14 +128,14 @@
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/simrank-iteration/</loc>
+    <loc>http://yangxudong.github.io/simrank-evidence/</loc>
     
     <lastmod>2019-04-02T02:43:36.864Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/simrank-evidence/</loc>
+    <loc>http://yangxudong.github.io/simrank-iteration/</loc>
     
     <lastmod>2019-04-02T02:43:36.864Z</lastmod>
     
@@ -191,13 +198,6 @@
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/hign-eq-is-talking2/</loc>
-    
-    <lastmod>2019-04-02T02:43:36.846Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yangxudong.github.io/item-pop-score/</loc>
     
     <lastmod>2019-04-02T02:43:36.846Z</lastmod>
@@ -205,14 +205,21 @@
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/hign-eq-is-talking/</loc>
+    <loc>http://yangxudong.github.io/hign-eq-is-talking2/</loc>
+    
+    <lastmod>2019-04-02T02:43:36.846Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yangxudong.github.io/gradient-descent/</loc>
     
     <lastmod>2019-04-02T02:43:36.834Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/gradient-descent/</loc>
+    <loc>http://yangxudong.github.io/hign-eq-is-talking/</loc>
     
     <lastmod>2019-04-02T02:43:36.834Z</lastmod>
     
@@ -226,14 +233,14 @@
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/good-feature/</loc>
+    <loc>http://yangxudong.github.io/gbdt/</loc>
     
     <lastmod>2019-04-02T02:43:36.821Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/gbdt/</loc>
+    <loc>http://yangxudong.github.io/good-feature/</loc>
     
     <lastmod>2019-04-02T02:43:36.821Z</lastmod>
     
@@ -247,14 +254,14 @@
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/deep-learning/</loc>
+    <loc>http://yangxudong.github.io/esmm-1/</loc>
     
     <lastmod>2019-04-02T02:43:36.814Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/esmm-1/</loc>
+    <loc>http://yangxudong.github.io/deep-learning/</loc>
     
     <lastmod>2019-04-02T02:43:36.814Z</lastmod>
     
