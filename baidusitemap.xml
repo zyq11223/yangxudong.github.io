@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>http://xudongyang.coding.me/deep-metric-learning/</loc>
-    <lastmod>2019-09-11</lastmod>
+    <lastmod>2019-09-12</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/distributed-tensorflow/</loc>
     <lastmod>2019-04-22</lastmod>
@@ -31,10 +31,10 @@
     <loc>http://xudongyang.coding.me/tensorflow-high-level-api/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/tensorflow-dataset/</loc>
+    <loc>http://xudongyang.coding.me/tensorflow-feature-columns/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/tensorflow-feature-columns/</loc>
+    <loc>http://xudongyang.coding.me/tensorflow-dataset/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/sponsored-search/</loc>
@@ -64,10 +64,10 @@
     <loc>http://xudongyang.coding.me/regularization-in-deep-learning/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/machine-learning/</loc>
+    <loc>http://xudongyang.coding.me/math-in-hexo/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/math-in-hexo/</loc>
+    <loc>http://xudongyang.coding.me/machine-learning/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/linucb/</loc>
@@ -91,19 +91,19 @@
     <loc>http://xudongyang.coding.me/gradient-descent-variants/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/gbdt/</loc>
+    <loc>http://xudongyang.coding.me/good-feature/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/good-feature/</loc>
+    <loc>http://xudongyang.coding.me/gbdt/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/esmm/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/deep-learning/</loc>
+    <loc>http://xudongyang.coding.me/esmm-1/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/esmm-1/</loc>
+    <loc>http://xudongyang.coding.me/deep-learning/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/deep-learning-in-search/</loc>
