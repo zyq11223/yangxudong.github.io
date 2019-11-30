@@ -373,6 +373,195 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/tensorflow-high-level-api/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/tensorflow-high-level-api/" class="post-title-link" itemprop="url">基于Tensorflow高阶API构建大规模分布式深度学习模型系列</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-06-25 15:00:28" itemprop="dateCreated datePublished" datetime="2018-06-25T15:00:28+08:00">2018-06-25</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/" itemprop="url" rel="index"><span itemprop="name">机器学习</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/机器学习/深度学习/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="Tensorflow高阶API简介"><a href="#Tensorflow高阶API简介" class="headerlink" title="Tensorflow高阶API简介"></a>Tensorflow高阶API简介</h2><p>在tensorflow高阶API（Estimator、Dataset、Layer、FeatureColumn等）问世之前，用tensorflow开发、训练、评估、部署深度学习模型，并没有统一的规范和高效的标准流程。Tensorflow的实践者们基于低阶API开发的代码在可移植性方面可能会遇到各种困难。例如，单机可以运行的模型希望改成能够分布式环境下运行需要对代码做额外的改动，如果在一个异构的环境中训练模型，则还需要额外花精力处理哪些部分跑在CPU上，哪些部分跑在GPU上。当不同的机器有不同数量的GPU数量时，问题更加复杂。</p>
+<p>为了能够快速支持新的网络架构的实验测试，深度学习框架都很重视网络架构搭建的灵活性需求，因此能让用户随心所欲地自定义代码实现是很重要的一块功能。</p>
+<p>模型构建的灵活性与简洁性需求看似是矛盾的。从开发者的视角，简洁性意味着当模型架构确定时实现不应该需要太多额外的技能要求，不必对深度学习框架有很深刻的洞察，就能够实验不同的模型特性。在内置简洁性属性的框架下开发者能够较轻松地开发出高质量的鲁棒性较好的模型软件，不会一不小心就踩到坑里。另一方面，灵活性意味着开发者能够实现任意的想要的模型结构，这需要框架能够提供一些相对低价的API。类似于Caffe这样的深度学习框架提供了DSL（domain specific language）来描述模型的结构，虽然搭建已知的成熟的模型架构比较方便，但却不能轻松搭建任意想要的模型结构。这就好比用积木搭建房子，如果现在需要一个特殊的以前没有出现过的积木块以便搭建一个特殊的房子，那就无计可施了。</p>
+<p>Tensorflow高阶API正是为了同时满足模型构建的灵活性与简洁性需求应运而生的，它能够让开发者快速搭建出高质量的模型，又能够使用结合低阶API实现不受限制的模型结构。<br></p>
+          <!--noindex-->
+          
+            <div class="post-button text-center">
+              <a class="btn" href="/tensorflow-high-level-api/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/esmm/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2044,201 +2233,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/sponsored-search/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="yangxudong">
-      <meta itemprop="description" content="勤劳的小毛驴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小毛驴">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/sponsored-search/" class="post-title-link" itemprop="url">搜索广告(sponsored-search)概述</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-
-              
-                
-              
-
-              <time title="Created: 2017-05-11 00:49:53" itemprop="dateCreated datePublished" datetime="2017-05-11T00:49:53+08:00">2017-05-11</time>
-            
-
-            
-              
-
-              
-                
-                <span class="post-meta-divider">|</span>
-                
-
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
-                <time title="Modified: 2019-04-02 10:43:36" itemprop="dateModified" datetime="2019-04-02T10:43:36+08:00">2019-04-02</time>
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算广告/" itemprop="url" rel="index"><span itemprop="name">计算广告</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>本文主要内容来自于斯坦福大学的Introduction to Computational Advertising课程，重点介绍了搜索广告相关的一部分内容。</p>
-<h1 id="计算广告-Computational-Advertising"><a href="#计算广告-Computational-Advertising" class="headerlink" title="计算广告(Computational Advertising)"></a>计算广告(Computational Advertising)</h1><p>计算广告是计算机科学中出现的一个相对较新的子科学领域，利用算法来给用户展示出最佳的广告。它集合了下面的技术于一身：</p>
-<ul>
-<li>信息检索 (Information retrieval)</li>
-<li>大规模搜索与文本分析（Large scale search and text analysis）</li>
-<li>统计建模（Statistical modeling）</li>
-<li>机器学习 （Machine learning）</li>
-<li>微观经济学 (Microeconomics)</li>
-<li>博弈论、拍卖理论与机制设计 （Game theory, auction theory, mechanism design）</li>
-<li>分类(Classification)</li>
-<li>优化(Optimization)</li>
-<li>推荐系统 (Recommender systems)</li></ul>
-          <!--noindex-->
-          
-            <div class="post-button text-center">
-              <a class="btn" href="/sponsored-search/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
   </nav>
 
 
@@ -2280,7 +2279,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">40</span>
+                    <span class="site-state-item-count">41</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -2335,7 +2334,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">19</span>
+                      
+                    
+                    <span class="site-state-item-count">20</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -2460,7 +2461,15 @@
                     
                       
                     
-                    <span class="site-state-item-count">54</span>
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">58</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>
@@ -2732,9 +2741,9 @@
   
     
       
-        
-      
     
+      
+        
       
     
       

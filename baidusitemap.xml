@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://xudongyang.coding.me/fast-dpp-map/</loc>
+    <lastmod>2019-11-30</lastmod>
+  </url>  <url>
     <loc>http://xudongyang.coding.me/deep-metric-learning/</loc>
     <lastmod>2019-09-12</lastmod>
   </url>  <url>
@@ -31,10 +34,10 @@
     <loc>http://xudongyang.coding.me/tensorflow-high-level-api/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/tensorflow-feature-columns/</loc>
+    <loc>http://xudongyang.coding.me/tensorflow-dataset/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
-    <loc>http://xudongyang.coding.me/tensorflow-dataset/</loc>
+    <loc>http://xudongyang.coding.me/tensorflow-feature-columns/</loc>
     <lastmod>2019-04-02</lastmod>
   </url>  <url>
     <loc>http://xudongyang.coding.me/sponsored-search/</loc>

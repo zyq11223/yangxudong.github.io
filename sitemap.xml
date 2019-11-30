@@ -1,309 +1,316 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://yangxudong.github.io/deep-metric-learning/</loc>
+    <loc>https://yangxudong.github.io/fast-dpp-map/</loc>
+    
+    <lastmod>2019-11-30T02:59:42.830Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://yangxudong.github.io/deep-metric-learning/</loc>
     
     <lastmod>2019-09-12T09:16:56.513Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/distributed-tensorflow/</loc>
+    <loc>https://yangxudong.github.io/distributed-tensorflow/</loc>
     
     <lastmod>2019-04-22T05:55:18.970Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/rank-distance/</loc>
+    <loc>https://yangxudong.github.io/rank-distance/</loc>
     
     <lastmod>2019-04-22T03:35:35.244Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/tags/index.html</loc>
+    <loc>https://yangxudong.github.io/tags/index.html</loc>
     
     <lastmod>2019-04-02T02:43:36.884Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/categories/index.html</loc>
+    <loc>https://yangxudong.github.io/categories/index.html</loc>
     
     <lastmod>2019-04-02T02:43:36.881Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/about/index.html</loc>
+    <loc>https://yangxudong.github.io/about/index.html</loc>
     
     <lastmod>2019-04-02T02:43:36.880Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/xdeepfm/</loc>
+    <loc>https://yangxudong.github.io/xdeepfm/</loc>
     
     <lastmod>2019-04-02T02:43:36.877Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/tree-ensemble-importance/</loc>
+    <loc>https://yangxudong.github.io/tree-ensemble-importance/</loc>
     
     <lastmod>2019-04-02T02:43:36.876Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/utf8/</loc>
+    <loc>https://yangxudong.github.io/utf8/</loc>
     
     <lastmod>2019-04-02T02:43:36.876Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/trie/</loc>
+    <loc>https://yangxudong.github.io/trie/</loc>
     
     <lastmod>2019-04-02T02:43:36.876Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/traffic-control/</loc>
+    <loc>https://yangxudong.github.io/traffic-control/</loc>
     
     <lastmod>2019-04-02T02:43:36.874Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/tensorflow-word-cnn/</loc>
+    <loc>https://yangxudong.github.io/tensorflow-word-cnn/</loc>
     
     <lastmod>2019-04-02T02:43:36.872Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/tensorflow-high-level-api/</loc>
+    <loc>https://yangxudong.github.io/tensorflow-high-level-api/</loc>
     
     <lastmod>2019-04-02T02:43:36.871Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/tensorflow-feature-columns/</loc>
+    <loc>https://yangxudong.github.io/tensorflow-dataset/</loc>
     
     <lastmod>2019-04-02T02:43:36.870Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/tensorflow-dataset/</loc>
+    <loc>https://yangxudong.github.io/tensorflow-feature-columns/</loc>
     
     <lastmod>2019-04-02T02:43:36.870Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/sponsored-search/</loc>
+    <loc>https://yangxudong.github.io/sponsored-search/</loc>
     
     <lastmod>2019-04-02T02:43:36.869Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/simrank-weight-matrix/</loc>
+    <loc>https://yangxudong.github.io/simrank-weight-matrix/</loc>
     
     <lastmod>2019-04-02T02:43:36.867Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/simrank-plus-plus/</loc>
+    <loc>https://yangxudong.github.io/simrank-plus-plus/</loc>
     
     <lastmod>2019-04-02T02:43:36.865Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/simrank-iteration/</loc>
+    <loc>https://yangxudong.github.io/simrank-iteration/</loc>
     
     <lastmod>2019-04-02T02:43:36.864Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/simrank-evidence/</loc>
+    <loc>https://yangxudong.github.io/simrank-evidence/</loc>
     
     <lastmod>2019-04-02T02:43:36.864Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/search-relevance2/</loc>
+    <loc>https://yangxudong.github.io/search-relevance2/</loc>
     
     <lastmod>2019-04-02T02:43:36.862Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/search-relevance/</loc>
+    <loc>https://yangxudong.github.io/search-relevance/</loc>
     
     <lastmod>2019-04-02T02:43:36.859Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/schedule-by-crontab/</loc>
+    <loc>https://yangxudong.github.io/schedule-by-crontab/</loc>
     
     <lastmod>2019-04-02T02:43:36.858Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/regularization-in-deep-learning/</loc>
+    <loc>https://yangxudong.github.io/regularization-in-deep-learning/</loc>
     
     <lastmod>2019-04-02T02:43:36.853Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/math-in-hexo/</loc>
+    <loc>https://yangxudong.github.io/math-in-hexo/</loc>
     
     <lastmod>2019-04-02T02:43:36.849Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/machine-learning/</loc>
+    <loc>https://yangxudong.github.io/machine-learning/</loc>
     
     <lastmod>2019-04-02T02:43:36.849Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/linucb/</loc>
+    <loc>https://yangxudong.github.io/linucb/</loc>
     
     <lastmod>2019-04-02T02:43:36.848Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/jvm-class-loader/</loc>
+    <loc>https://yangxudong.github.io/jvm-class-loader/</loc>
     
     <lastmod>2019-04-02T02:43:36.847Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/hign-eq-is-talking2/</loc>
+    <loc>https://yangxudong.github.io/hign-eq-is-talking2/</loc>
     
     <lastmod>2019-04-02T02:43:36.846Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/item-pop-score/</loc>
+    <loc>https://yangxudong.github.io/item-pop-score/</loc>
     
     <lastmod>2019-04-02T02:43:36.846Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/hign-eq-is-talking/</loc>
+    <loc>https://yangxudong.github.io/hign-eq-is-talking/</loc>
     
     <lastmod>2019-04-02T02:43:36.834Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/gradient-descent/</loc>
+    <loc>https://yangxudong.github.io/gradient-descent/</loc>
     
     <lastmod>2019-04-02T02:43:36.834Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/gradient-descent-variants/</loc>
+    <loc>https://yangxudong.github.io/gradient-descent-variants/</loc>
     
     <lastmod>2019-04-02T02:43:36.822Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/good-feature/</loc>
+    <loc>https://yangxudong.github.io/good-feature/</loc>
     
     <lastmod>2019-04-02T02:43:36.821Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/gbdt/</loc>
+    <loc>https://yangxudong.github.io/gbdt/</loc>
     
     <lastmod>2019-04-02T02:43:36.821Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/esmm/</loc>
+    <loc>https://yangxudong.github.io/esmm/</loc>
     
     <lastmod>2019-04-02T02:43:36.815Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/esmm-1/</loc>
+    <loc>https://yangxudong.github.io/esmm-1/</loc>
     
     <lastmod>2019-04-02T02:43:36.814Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/deep-learning/</loc>
+    <loc>https://yangxudong.github.io/deep-learning/</loc>
     
     <lastmod>2019-04-02T02:43:36.814Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/deep-learning-in-search/</loc>
+    <loc>https://yangxudong.github.io/deep-learning-in-search/</loc>
     
     <lastmod>2019-04-02T02:43:36.812Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/decision-tree/</loc>
+    <loc>https://yangxudong.github.io/decision-tree/</loc>
     
     <lastmod>2019-04-02T02:43:36.812Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/dcn/</loc>
+    <loc>https://yangxudong.github.io/dcn/</loc>
     
     <lastmod>2019-04-02T02:43:36.809Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/ctr-models/</loc>
+    <loc>https://yangxudong.github.io/ctr-models/</loc>
     
     <lastmod>2019-04-02T02:43:36.797Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/404.html</loc>
+    <loc>https://yangxudong.github.io/404.html</loc>
     
     <lastmod>2019-04-02T02:43:36.796Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yangxudong.github.io/build-hexo-blog/</loc>
+    <loc>https://yangxudong.github.io/build-hexo-blog/</loc>
     
     <lastmod>2019-04-02T02:43:36.796Z</lastmod>
     

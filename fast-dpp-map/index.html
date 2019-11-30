@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/my_carton.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/my_carton.png?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="多样性和相关性是衡量推荐系统的常用的指标，这两个指标同时影响着推荐系统的商业目标和用户体验。Hulu在NIPS 2018 会议上发表的论文《Fast Greedy MAP Inference for Determinantal Point Process to Improve Recommendation Diversity》中，提出了基于行列式点过程的推荐多样性提升算法，虽然网上可以找到很多解读">
+<meta name="keywords" content="推荐算法,多样性,行列式点过程,DPP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于行列式点过程的推荐多样性提升算法的直观理解">
+<meta property="og:url" content="http://xudongyang.coding.me/fast-dpp-map/index.html">
+<meta property="og:site_name" content="小毛驴">
+<meta property="og:description" content="多样性和相关性是衡量推荐系统的常用的指标，这两个指标同时影响着推荐系统的商业目标和用户体验。Hulu在NIPS 2018 会议上发表的论文《Fast Greedy MAP Inference for Determinantal Point Process to Improve Recommendation Diversity》中，提出了基于行列式点过程的推荐多样性提升算法，虽然网上可以找到很多解读">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://xudongyang.coding.me/fast-dpp-map/det.jpeg">
+<meta property="og:image" content="http://xudongyang.coding.me/fast-dpp-map/fast-dpp-map.jpg">
+<meta property="og:updated_time" content="2019-11-30T02:59:42.830Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于行列式点过程的推荐多样性提升算法的直观理解">
+<meta name="twitter:description" content="多样性和相关性是衡量推荐系统的常用的指标，这两个指标同时影响着推荐系统的商业目标和用户体验。Hulu在NIPS 2018 会议上发表的论文《Fast Greedy MAP Inference for Determinantal Point Process to Improve Recommendation Diversity》中，提出了基于行列式点过程的推荐多样性提升算法，虽然网上可以找到很多解读">
+<meta name="twitter:image" content="http://xudongyang.coding.me/fast-dpp-map/det.jpeg">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="小毛驴" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="http://xudongyang.coding.me/fast-dpp-map/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>基于行列式点过程的推荐多样性提升算法的直观理解 | 小毛驴</title>
+  
+
+
+
+
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c57513996270ce211928f7fe0c7a5483";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小毛驴</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">Adventure may hurt you, but monotony will kill you.</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-essays">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/essays" rel="section"><i class="menu-item-icon fa fa-fw fa-newspaper-o"></i> <br>essays</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>About</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://xudongyang.coding.me/fast-dpp-map/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="yangxudong">
+      <meta itemprop="description" content="勤劳的小毛驴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小毛驴">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">基于行列式点过程的推荐多样性提升算法的直观理解
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-11-30 10:26:08 / Modified: 10:59:42" itemprop="dateCreated datePublished" datetime="2019-11-30T10:26:08+08:00">2019-11-30</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/推荐系统/" itemprop="url" rel="index"><span itemprop="name">推荐系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">Comments: </span>
+                <a href="/fast-dpp-map/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/fast-dpp-map/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>多样性和相关性是衡量推荐系统的常用的指标，这两个指标同时影响着推荐系统的商业目标和用户体验。Hulu在NIPS 2018 会议上发表的论文《<a href="http://papers.nips.cc/paper/7805-fast-greedy-map-inference-for-determinantal-point-process-to-improve-recommendation-diversity.pdf" target="_blank" rel="noopener">Fast Greedy MAP Inference for Determinantal Point Process to Improve Recommendation Diversity</a>》中，提出了基于行列式点过程的推荐多样性提升算法，虽然网上可以找到很多解读文章，但个人觉得解释得不是很直观和易懂。本文尝试给出一种更加简单和容易理解的解读，并且给出算法的实现代码，是对自己理解过程的一次总结，也希望能够帮助到读者。</p>
+<p>我们有一个待推荐的候选商品集合$Z=\lbrace 1,2,…,M \rbrace$，针对一个给定的用户，推荐系统需要选择商品集合$Z$中的$N$个商品展现给用户，同时希望展现给用户的商品列表满足一定相关性和多样性。这就是我们要解决的问题，那么首先我们必须弄清楚如何衡量相关性和多样性。<br><a id="more"></a></p>
+<h2 id="如何量化推荐列表的多样性和相关性"><a href="#如何量化推荐列表的多样性和相关性" class="headerlink" title="如何量化推荐列表的多样性和相关性"></a>如何量化推荐列表的多样性和相关性</h2><p>相关性很好理解，就是推荐给用户的商品必须符合用户的兴趣，满足用户的购物需求。用户会用点击行为来表达兴趣，用下单行为来满足购物需求。用户的点击和购买行为就是系统收集到的样本，基于这些样本推荐系统的从业者一直以来都在做的点击率和转化率预估，其实就是对相关性的一种衡量和量化。给定用户 $u$ 和候选商品集合 $C_u$，定义向量 $r_u$ 为相关性度量值，其中 $r_i$ 表示用户与商品 $i$ 的相关程度，具体地，可以用用户对该商品的预估点击转化率（$pCTCVR$）来刻画。关于如何预估点击转化率，可以参考《<a href="https://zhuanlan.zhihu.com/p/37562283" target="_blank" rel="noopener">CVR预估的新思路：完整空间多任务模型</a>》这篇文章。</p>
+<p>推荐多样性（diversity）衡量单个推荐列表中物品之间的差异程度，通过计算在同一个推荐 list 中两两 Item 之间的相似度的平均值来进行衡量。那么如何量化推荐列表的多样性呢？要量化推荐列表的多样性，我们首先要能够计算列表中任意两个商品之间的相似性（similarity）。计算两个对象之间的相似性有很多方法，这里我们假设用特征向量的余弦相似度的方法来计算。商品在表示成特征向量之后，两个特征向量之间的夹角越小，说明这两个向量越相似，也就是对应的两个商品越相似。</p>
+<p>推荐列表中的商品彼此之间的相似度越低，推荐列表的多样性也就越高。我们用一个定义在商品集合的相似度矩阵上的函数 $f(S)\in R$ 来表示商品集合的多样性。函数的输入是商品集合的相似度矩阵，矩阵的每个元素 $S_{ij}=cosine(x_i, x_j)$ 是商品对 $\langle i,j \rangle$ 的相似度度量；函数的输出是衡量商品集合多样性程度的一个标量。那么，什么样的函数可以满足这样的定义呢？</p>
+<p>一个很好的选择就是矩阵 $S$ 的行列式 $det(S)$。这是因为矩阵可以看着是一组向量的集合，而矩阵的行列式的物理意义为矩阵中的各个向量张成的平行多面体体积的平方。这些向量彼此之间越不相似，向量间的夹角就会越大，张成的平行多面体的体积也就越大，<strong>矩阵的行列式也就越大，对应的商品集合的多样性也就越高</strong>。当这些向量彼此正交的时候，多样性达到最高。可以通过一个二维平面上的例子直观地理解一下这背后的逻辑。</p>
+<p><img src="/fast-dpp-map/det.jpeg" alt></p>
+<p>现在我们可以分别度量相关性和多样性了，接下来的问题就是能否在同一个过程中同时度量相关性和多样性。答案当然是肯定的，具体地，我们引入一个叫做核矩阵(kernel matrix)的概念，用核矩阵的行列式来同时度量商品集合的多样性和相关性。那么核矩阵是如何定义的呢？怎么构建核矩阵才能有机融合相关性和多样性呢？</p>
+<p>核矩阵是由$n$维欧氏空间中$k$个向量的内积组成的矩阵，可被称之为Gram矩阵。所以，核矩阵是一个半正定(positive semidefinite, PSD)矩阵。关于半正定矩阵的定义，可以参考“<a href="https://www.cnblogs.com/marsggbo/p/11461155.html" target="_blank" rel="noopener">如何理解正定矩阵和半正定矩阵</a>”。</p>
+<blockquote>
+<p>给定一个大小为 $n \times n$ 的实对称矩阵 $A$，若对于任意长度为 $n$ 的非零向量 $x$，有 $ x^T Ax$恒成立，则矩阵 $A$ 是一个<strong>半正定矩阵</strong>。</p>
+</blockquote>
+<p>因为核矩阵 $L$是一个半正定矩阵，所以可以被分解为 $L=B^T B$，其中 $B$ 的每一列(column)为候选集中商品的表示向量，具体地$B$ 的每一个列向量可以构建为相关性分数 $r_i \ge 0$ 与归一化后的商品特征向量 $f_i \in R^D (||f_i||_2=1)$ 的乘积。因此，核矩阵中的元素可以被写成：</p>
+<script type="math/tex; mode=display">L_{ij} = \langle B_i,B_j \rangle = \langle r_i f_i, r_j f_j \rangle = r_i r_j \langle f_i, f_j \rangle</script><p>其中，$\langle f_i, f_j \rangle = S_{ij}$ 是商品 $i$ 与商品 $j$ 之间的相似度的度量。所以，核矩阵可以被进一步写为:</p>
+<script type="math/tex; mode=display">L = Diag(r_u) \cdot S \cdot Diag(r_u)</script><p>其中，$Diag(r_u)$ 是对角阵（diagonal matrix），它的对角向量（diagonal vector）是相关性度量向量$r_u$。</p>
+<p>假设系统筛选出的推荐给用户的商品子集为 $R_u$，$L_{R_u}$表示被商品子集$R_u$索引的核矩阵的子矩阵，则商品子集 $R_u$ 的相关性和多样性可以用下式度量：</p>
+<script type="math/tex; mode=display">log det(L_{R_u}) = \sum\limits_{i \in R_u} log(r_{u,i}^2) + log det(S_{R_u})</script><p>其中，$det(\cdot)$ 表示矩阵的行列式。上式等号右边的两项分别度量推荐列表的相关性和多样性；等式把相关性度量和多样性度量有机地融合在一起。</p>
+<h2 id="如何选择能够最大化相关性和多样性的商品子集"><a href="#如何选择能够最大化相关性和多样性的商品子集" class="headerlink" title="如何选择能够最大化相关性和多样性的商品子集"></a>如何选择能够最大化相关性和多样性的商品子集</h2><p>前一小节解释了如何度量推荐列表的相关性和多样性，但并未解释如何从候选商品集合中选择商品组成最终的推荐列表。商品列表选择的过程其实就是从所有的候选商品子集中选择一个能使上述量化值最大的子集，而这个选择的过程需要借助行列式点过程来实现。</p>
+<p>DPP（Determinantal Point Process）行列式点过程，是一种性能较高的概率模型，其将复杂的概率计算转换成简单的行列式计算，通过核矩阵的行列式计算每一个子集的概率。该概率可以理解为用户对推荐列表满意的概率，受到相关性与多样性两个因素的影响。具体地，对于一个离散的集合$Z=\lbrace 1,2,…,M \rbrace$，一个DPP $P$ 是定义在该集合的所有子集$2^Z$上的一个概率度量。当 $P$ 会为空集给出非零概率时，存在一个矩阵 $L∈R^{M×M}$，对于所有子集$Y⊆Z$，$Y$的概率为：</p>
+<script type="math/tex; mode=display">P(Y) \propto det(L_Y)</script><p>其中，$L$ 是一个实数型(real)、半正定(positive semidefinite)的kernel matrix，它通过 $Z$ 的元素进行索引。</p>
+<p>为了描述的方便，给出一些符合定义：</p>
+<ul>
+<li>集合使用大写字母表示，比如：$Z$。</li>
+<li>向量和矩阵分别通过粗体小写字母和粗体大写字母表示。</li>
+<li>$(\cdot)^{\top}$ 表示向量或矩阵的转置。</li>
+<li>$⟨x,y⟩$是向量$x$和$y$的内积。</li>
+<li>给定子集$X$和$Y$，$L_{X,Y}$是 $L$ 的sub-matrix，通过行中的$X$和列中的$Y$索引。</li>
+</ul>
+<p>出于简洁，我们假设:</p>
+<ul>
+<li>$L_{X,X} = L_X, L_{X,\lbrace i \rbrace}=L_{X,i}$，</li>
+<li>以及$L_{\lbrace i \rbrace, X} = L_{i,X}$。</li>
+<li>$det(L)$是$L$的行列式，惯例上令$det(L_\emptyset)=1$。</li>
+</ul>
+<p>推荐列表就是从候选商品集合中选择能够最大化后验概率的商品子集，这一筛选过程就是行列式点过程的最大后验概率推断MAP（maximum a posteriori inference）。</p>
+<script type="math/tex; mode=display">Y_{map} = \underset{y \subseteq Z}{argmax} \ det(L_Y)</script><p>行列式点过程的MAP求解是一个复杂的过程，Hulu的论文中提出了一种改进的贪心算法能够快速求解，该算法的时间复杂度为 $O(N^2 M)$，$N$为返回的商品列表中商品的个数。</p>
+<p>这一求解过程简单来说就是每次从候选集中贪心地选择一个能使边际收益（ marginal gain）最大的商品加入到最终的结果子集中，直到满足停止条件为止，即每次选择商品 $j$ 添加到结果集中 $Y_g$中，$Y_g$初始化为空集，商品 $j$ 需要满足下面的等式：</p>
+<script type="math/tex; mode=display">j = \underset{i \in Z \backslash Y_g}{argmax} \ log det(Y_g \cup \lbrace i \rbrace) - log det(Y_g) \tag{1}</script><p>其中行列式$det(L_{Y_g})$直接求解复杂度较高，需要有巧妙的方法简化计算过程。假设$det(L_{Y_g})&gt;0$，$L_{Y_g}$的柯列斯基分解(Cholesky decomposition)如下：</p>
+<script type="math/tex; mode=display">L_{Y_g} = V V^{\top}</script><p>其中$V$是一个可逆下三角矩阵。对于任意$i \in Z \backslash Y_g$，$L_{Y_g \cup \lbrace i \rbrace}$的柯列斯基分解(Cholesky decomposition)可以定为：</p>
+<script type="math/tex; mode=display">L_{Y_g \cup \lbrace i \rbrace} = \begin{bmatrix}
+    L_{Y_g} & L_{Y_{g,i}} \\
+    L_{i,Y_g} & L_{ii} \\
+    \end{bmatrix} = \begin{bmatrix}
+    V & 0 \\
+    c_i & d_i \\
+    \end{bmatrix} \begin{bmatrix}
+    V & 0 \\
+    c_i & d_i \\
+    \end{bmatrix}^{\top} \tag{2}</script><p>其中，等式右边右上角的子矩阵为0向量，是因为$V$是一个下三角矩阵。根据矩阵乘法公式，行向量$c_i$和标量$d_i≥0$满足：</p>
+<p>\begin{align}<br>V{c_i^{\top}} &amp;= L_{Y_{g,i}} \tag{3} \\<br>d_i^2 &amp;= L_{ii} - | c_i |_2^2 \tag{4}<br>\end{align}</p>
+<p>另外，根据等式(2), 可以得到：</p>
+<script type="math/tex; mode=display">det(L_{Y_g \cup \lbrace i \rbrace}) = det(VV^{\top}) \cdot d_i^2 = det(L_{Y_g}) \cdot d_i^2 \tag{5}</script><p>因此，等式(1)可以简化为：</p>
+<script type="math/tex; mode=display">j = \underset{i \in Z \backslash Y_g}{argmax} \ log(d_i^2) \tag{6}</script><p>一旦等式(6)被求解，根据等式(2)，$L_{Y_g \cup \lbrace i \rbrace}$的Cholesky decomposition变成是：</p>
+<script type="math/tex; mode=display">L_{Y_g \cup \lbrace j \rbrace} = \begin{bmatrix}
+    V & 0 \\
+    c_j & d_j \\
+    \end{bmatrix} \begin{bmatrix}
+    V & 0 \\
+    c_j & d_j \\
+    \end{bmatrix}^{\top}  \tag{7}</script><p>其中，$c_j$ 和 $d_j$ 是已经计算出来了的。当一个新item被添加到$Y_g$之后，$L_{Y_g}$的Cholesky因子可以被有效更新。</p>
+<p>对于每个item $i$，$c_i$ 和 $d_i$ 可以被增量更新。在等式(6)被求解后，将 $c_i’$ 和 $d_i’$ 定义为新的需求求解的向量和标量，其中 $i \in Z \backslash (Y_g \cup \lbrace j \rbrace)$。根据等式(3)和等式(7)，我们有：</p>
+<script type="math/tex; mode=display">
+\begin{bmatrix}
+V & 0 \\
+c_i & d_i \\
+\end{bmatrix} c_i'^T = L_{Y_g \cup \lbrace j \rbrace, i} = \begin{bmatrix}
+L_{Y_{g,i}} \\
+L_{ji} \\
+\end{bmatrix} \tag{8}</script><p>通过将等式(3)和等式(8)组合，我们可以对 $c_i$ 和 $d^2_i$ 进行更新，有：</p>
+<script type="math/tex; mode=display">c_i' = \begin{bmatrix} c_i & (L_{ji}- \langle c_j,c_i\rangle) / d_j \end{bmatrix} \doteq  \begin{bmatrix} c_i & e_i \end{bmatrix}</script><p>等式(4)意味着：</p>
+<script type="math/tex; mode=display">d_i'^2 = L_{ii} - \| c_i' \|_2^2 = L_{ii} - \| c_i \|_2^2 - e_i^2 = d_i^2 - e_i^2 \tag{9}</script><p>最初，$Y_g = \emptyset$, 等式(5)意味着: $d_i^2 = det(L_{ii}) = L_{ii}$。完整算法描述如下：</p>
+<p><img src="/fast-dpp-map/fast-dpp-map.jpg" alt></p>
+<p>其中，停止条件（stopping criteria）为$d_j^2 &lt; 1$或者$|Y_g| &gt; N$。</p>
+<h2 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h2><p>Python代码如下：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">dpp</span><span class="params">(kernel_matrix, max_length, epsilon=<span class="number">1E-10</span>)</span>:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    fast implementation of the greedy algorithm</span></span><br><span class="line"><span class="string">    :param kernel_matrix: 2-d array</span></span><br><span class="line"><span class="string">    :param max_length: positive int</span></span><br><span class="line"><span class="string">    :param epsilon: small positive scalar</span></span><br><span class="line"><span class="string">    :return: list</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    item_size = kernel_matrix.shape[<span class="number">0</span>]</span><br><span class="line">    cis = np.zeros((max_length, item_size))</span><br><span class="line">    di2s = np.copy(np.diag(kernel_matrix))</span><br><span class="line">    selected_items = list()</span><br><span class="line">    selected_item = np.argmax(di2s)</span><br><span class="line">    selected_items.append(selected_item)</span><br><span class="line">    <span class="keyword">while</span> len(selected_items) &lt; max_length:</span><br><span class="line">        k = len(selected_items) - <span class="number">1</span></span><br><span class="line">        ci_optimal = cis[:k, selected_item]</span><br><span class="line">        di_optimal = math.sqrt(di2s[selected_item])</span><br><span class="line">        elements = kernel_matrix[selected_item, :]</span><br><span class="line">        eis = (elements - np.dot(ci_optimal, cis[:k, :])) / di_optimal</span><br><span class="line">        cis[k, :] = eis</span><br><span class="line">        di2s -= np.square(eis)</span><br><span class="line">        selected_item = np.argmax(di2s)</span><br><span class="line">        <span class="keyword">if</span> di2s[selected_item] &lt; epsilon:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        selected_items.append(selected_item)</span><br><span class="line">    <span class="keyword">return</span> selected_items</span><br></pre></td></tr></table></figure></p>
+<p>测试代码：<br><figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">from dpp import *</span><br><span class="line"></span><br><span class="line">import time</span><br><span class="line"></span><br><span class="line">item_size = 5000</span><br><span class="line">feature_dimension = 5000</span><br><span class="line">max_length = 1000</span><br><span class="line"></span><br><span class="line">scores = np.exp(0.01 * np.random.randn(item_size) + 0.2)</span><br><span class="line">feature_vectors = np.random.randn(item_size, feature_dimension)</span><br><span class="line"></span><br><span class="line">feature_vectors /= np.linalg.norm(feature_vectors, axis=1, keepdims=True)</span><br><span class="line">similarities = np.dot(feature_vectors, feature_vectors.T)</span><br><span class="line">kernel_matrix = scores.reshape((item_size, 1)) * similarities * scores.reshape((1, item_size))</span><br><span class="line"></span><br><span class="line">print 'kernel matrix generated!'</span><br><span class="line"></span><br><span class="line">t = time.time()</span><br><span class="line">result = dpp(kernel_matrix, max_length)</span><br><span class="line">print 'algorithm running time: ' + '\t' + <span class="string">"&#123;0:.4e&#125;"</span>.format(time.time() - t)</span><br></pre></td></tr></table></figure></p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
+<li><a href="https://blog.csdn.net/yz930618/article/details/84862751" target="_blank" rel="noopener">《基于行列式点过程的推荐多样性提升算法》原理详解</a></li>
+<li><a href="http://www.doc88.com/p-8089116412071.html" target="_blank" rel="noopener">行列式点过程</a></li>
+<li><a href="http://d0evi1.com/fast-map-dpp/" target="_blank" rel="noopener">论文解读</a>、<a href="https://vimeo.com/240776466" target="_blank" rel="noopener">作者报告视频</a></li>
+<li><a href="https://dspace.mit.edu/bitstream/handle/1721.1/103671/953457802-MIT.pdf?sequence=1" target="_blank" rel="noopener">Learning and Enforcing Diversity with Determinantal Point Processes</a></li>
+</ol>
+<h2 id="推荐阅读"><a href="#推荐阅读" class="headerlink" title="推荐阅读"></a>推荐阅读</h2><ol>
+<li><a href="https://zhuanlan.zhihu.com/p/35753281" target="_blank" rel="noopener">Contextual Bandit算法在推荐系统中的实现及应用</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/35512064" target="_blank" rel="noopener">商品人气分模型</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/36051733" target="_blank" rel="noopener">电商平台商家流量分配机制算法</a></li>
+<li><a href="https://yangxudong.github.io" target="_blank" rel="noopener">个人博客</a>，会不定期更新</li>
+<li><a href="https://zhuanlan.zhihu.com/p/35465875" target="_blank" rel="noopener">主流CTR预估模型的演化及对比</a></li>
+</ol>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/推荐算法/" rel="tag"># 推荐算法</a>
+          
+            <a href="/tags/多样性/" rel="tag"># 多样性</a>
+          
+            <a href="/tags/行列式点过程/" rel="tag"># 行列式点过程</a>
+          
+            <a href="/tags/DPP/" rel="tag"># DPP</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/deep-metric-learning/" rel="next" title="深度度量学习中的损失函数">
+                <i class="fa fa-chevron-left"></i> 深度度量学习中的损失函数
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">yangxudong</p>
+              <div class="site-description motion-element" itemprop="description">勤劳的小毛驴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">41</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">20</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">58</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://weibo.com/u/1192649764" title="微博 &rarr; http://weibo.com/u/1192649764" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.jianshu.com/users/4e1990280df6/latest_articles" title="简书 &rarr; http://www.jianshu.com/users/4e1990280df6/latest_articles" rel="noopener" target="_blank"><i class="fa fa-fw fa-book"></i>简书</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://zhuanlan.zhihu.com/yangxudong" title="知乎 &rarr; https://zhuanlan.zhihu.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-medapps"></i>知乎</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://blog.csdn.net/yangxudong" title="CSDN &rarr; http://blog.csdn.net/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="http://www.cnblogs.com/yangxudong/" title="博客园 &rarr; http://www.cnblogs.com/yangxudong/" rel="noopener" target="_blank"><i class="fa fa-fw fa-rss-square"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/yangxudong" title="GitHub &rarr; https://github.com/yangxudong" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:yangxudongsuda@gmail.com" title="E-Mail &rarr; mailto:yangxudongsuda@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope-o"></i>E-Mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#如何量化推荐列表的多样性和相关性"><span class="nav-number">1.</span> <span class="nav-text">如何量化推荐列表的多样性和相关性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何选择能够最大化相关性和多样性的商品子集"><span class="nav-number">2.</span> <span class="nav-text">如何选择能够最大化相关性和多样性的商品子集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现代码"><span class="nav-number">3.</span> <span class="nav-text">实现代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#推荐阅读"><span class="nav-number">5.</span> <span class="nav-text">推荐阅读</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yangxudong</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    <!-- LOCAL: You can save these files to your site and update links -->
+
+  
+  <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitmint.browser.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.css">
+<!-- END LOCAL -->
+
+<script>
+  function renderGitment() {
+    var gitment = new Gitmint({
+      id: window.location.pathname,
+      owner: 'yangxudong',
+      repo: 'yangxudong.github.io',
+      
+        lang: '' || navigator.language || navigator.systemLanguage || navigator.userLanguage,
+      
+      oauth: {
+      
+      
+        client_secret: '5bb7f33cc97a00106138632b133b361eca31b0fc',
+      
+        client_id: 'a6f099e5dd8b15032ace'
+      }
+    });
+    gitment.render('gitment-container');
+  }
+
+  
+    renderGitment();
+  
+</script>
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
